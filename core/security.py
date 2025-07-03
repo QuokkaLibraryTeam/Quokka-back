@@ -1,31 +1,42 @@
-import jwt
 from datetime import datetime, timedelta
-from typing import Union
+from typing import Optional
 
-from fastapi import HTTPException, status
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 
-from core.config import settings
+from core.config import get_settings
+
+settings = get_settings()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
-# JWT 토큰 생성
-def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes= settings.EXPIRE_TIME)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+def create_access_token(subject: str,
+                        expires_delta: Optional[timedelta] = None) -> str:
+    now = datetime.utcnow()
+    payload = {
+        "sub": subject,
+        "iat": now,
+        "exp": now + (expires_delta or timedelta(minutes=settings.EXPIRE_TIME)),
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-# JWT 토큰 검증
-def verify_token(token: str):
+
+def decode_token(token: str) -> str:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return payload
-    except jwt.PyJWTError:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+        return payload.get("sub") or ""
+    except jwt.PyJWTError:  # 만료·서명 오류 등
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def verify_token(token: str = Depends(oauth2_scheme)) -> str:
+    return decode_token(token)

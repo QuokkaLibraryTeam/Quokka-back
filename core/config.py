@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic import BaseSettings
 
 
@@ -11,8 +13,11 @@ class Settings(BaseSettings):
     ALGORITHM :str = "HS256"
     EXPIRE_TIME : int = 30                          # 분 단위
 
+    GEMINI_MODEL: str = "gemini-2.0-flash"
+
     class Config:
         env_file = ".env"  # .env 파일에서 값 불러오기
 
-
-settings = Settings()  # 전역 설정 객체
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
