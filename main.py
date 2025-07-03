@@ -2,7 +2,8 @@
 
 from fastapi import FastAPI, Request
 from api.v1.routers import router as v1_router  # 버전별 라우터
-from core.config import settings                # 환경 설정 불러오기
+from core.config import  # 환경 설정 불러오기
+    get_settings
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.base import get_db
@@ -15,7 +16,7 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=get_settings().ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
