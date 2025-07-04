@@ -9,11 +9,13 @@ from schemas.scene import SceneCreate
 class StoryBase(BaseModel):
     title: str
 
+
 class StoryCreate(StoryBase):
     pass
 
+
 class StoryUpdate(BaseModel):
-    title: Optional[str] = None   # 제목만 부분 수정  # 전체 교체 or None
+    title: Optional[str] = None  # 제목만 부분 수정  # 전체 교체 or None
 
 
 class SceneOut(BaseModel):
@@ -24,7 +26,8 @@ class SceneOut(BaseModel):
     class Config:
         orm_mode = True
 
-class StoryOut(BaseModel):
+
+class StoryOutWithDetail(BaseModel):
     id: int
     user_id: str
     title: str
@@ -35,8 +38,16 @@ class StoryOut(BaseModel):
     class Config:
         orm_mode = True
 
+
+class StoryOut(BaseModel):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
 class StorysOut(BaseModel):
-    stories : List[StoryOut]
+    stories: List[StoryOut]
 
     class Config:
         orm_mode = True
