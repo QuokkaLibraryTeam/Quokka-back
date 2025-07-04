@@ -2,8 +2,7 @@
 
 from fastapi import FastAPI, Request
 from api.v1.routers import router as v1_router  # 버전별 라우터
-from core.config import  # 환경 설정 불러오기
-    get_settings
+from core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.base import get_db
@@ -23,12 +22,14 @@ app.add_middleware(
 )
 
 @app.middleware("http")
-async def add_db_session(request: Request, call_next):
-    # db 세션을 요청에 추가
-    db = get_db()
-    request.state.db = db
-    response = await call_next(request)
-    db.close()  # 응답 후 세션 닫기
+async def db_session_middleware(request: Request, call_next):
+    gen = get_db()
+    db = next(gen)
+    try:
+        request.state.db = db
+        response = await call_next(request)
+    finally:
+        gen.close()
     return response
 
 # 라우터 등록

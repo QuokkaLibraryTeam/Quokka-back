@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     GEMINI_MODEL: str = "gemini-2.0-flash"
 
+    REDIS_URL:str
+
     class Config:
         env_file = ".env"
 
