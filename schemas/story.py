@@ -1,9 +1,8 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List, Optional, TypedDict
 
-from schemas.scene import SceneCreate
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StoryBase(BaseModel):
@@ -15,16 +14,17 @@ class StoryCreate(StoryBase):
 
 
 class StoryUpdate(BaseModel):
-    title: Optional[str] = None  # 제목만 부분 수정  # 전체 교체 or None
+    title: Optional[str] = None
 
 
 class SceneOut(BaseModel):
     id: int
     order_idx: int
     text: str
+    image_url : str
 
-    class Config:
-        orm_mode = True
+    # Pydantic v2: ORM 모델의 속성 기반 매핑 허용
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StoryOutWithDetail(BaseModel):
@@ -32,22 +32,38 @@ class StoryOutWithDetail(BaseModel):
     user_id: str
     title: str
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]
     scenes: List[SceneOut]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StoryOut(BaseModel):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class StorysOut(BaseModel):
+class StoriesOut(BaseModel):
     stories: List[StoryOut]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClientStart(TypedDict):
+    type: str
+    text: str
+
+
+class ClientAnswer(TypedDict):
+    type: str
+    text: str
+
+
+class ClientChoice(TypedDict):
+    type: str
+    index: int
+
+
+class ClientCmd(TypedDict):
+    type: str  # "accept" / "retry"

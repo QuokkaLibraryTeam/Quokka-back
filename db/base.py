@@ -1,18 +1,27 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm import sessionmaker, declarative_base
 from core.config import get_settings
 
-engine = create_engine(get_settings().DATABASE_URL, connect_args={"check_same_thread": False})
+settings = get_settings()
 
-# 세션 로컬 생성
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(
+    settings.DATABASE_URL,
+    echo=settings.DEBUG,
+    future=True,
+)
 
-# Base 생성 (모델에 사용)
+# 세션 팩토리
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    future=True,
+)
+
+# Base 클래스
 Base = declarative_base()
 
+# 의존성 주입용 DB 세션
 def get_db():
     db = SessionLocal()
     try:

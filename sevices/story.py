@@ -36,12 +36,15 @@ def check_story_auth(db: Session, story_id: int, user_id: str):
         return False
     return story.user_id == user_id
 
+def get_story_by_story_id(db: Session, story_id: int):
+    story = story_crud.get(db,story_id)
+    if story is None:
+        return False
+    return story
 
-_QUESTION_RE = re.compile(r"QUESTION:\s*(.+)", re.I)
-_EXAMPLE_RE = re.compile(r"^\s*[-–]\s*(.+)", re.M)
-
-def parse_q_examples(text: str) -> Tuple[str, List[str]]:
-    q_match = _QUESTION_RE.search(text)
-    question = q_match.group(1).strip() if q_match else text.strip()
-    examples = _EXAMPLE_RE.findall(text)[:4]
-    return question, examples
+def delete_story_by_story_id(db: Session, story_id: int):
+    story = story_crud.get(db,story_id)
+    if story is None:
+        return False
+    story_crud.remove(db,story_id)
+    return True

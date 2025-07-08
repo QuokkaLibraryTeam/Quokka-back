@@ -6,11 +6,13 @@ from core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.base import get_db
-
+from db.base import Base, engine
 app = FastAPI(
     title="quokkalib",
-    version="1.0.0"
+    version="1.0.1"
 )
+
+Base.metadata.create_all(bind=engine)
 
 # CORS 설정
 app.add_middleware(

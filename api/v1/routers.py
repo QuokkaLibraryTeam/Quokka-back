@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.v1.endpoints import websockets
+from api.v1.endpoints import websockets, users, stories, auth
 
 router = APIRouter()
 
@@ -8,3 +8,6 @@ router = APIRouter()
 # router.include_router(user.router, prefix="/users", tags=["Users"])
 
 router.include_router(websockets.router,prefix="/ws",tags=["ws"])
+router.include_router(users.router,prefix="/users",tags=["users"])
+router.include_router(stories.router,prefix="/stories",tags=["stories"])
+router.include_router(auth.router,prefix="/auth",tags=["auth"])
