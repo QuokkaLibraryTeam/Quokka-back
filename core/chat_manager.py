@@ -77,7 +77,6 @@ async def mark_done(key: str) -> None:
     await rds.persist(_meta(key))
 
 
-# --- 텍스트 및 이미지 생성 ---
 async def send_message(session_key: str, user_text: str) -> str:
     """
     시스템 페르소나와 Redis 히스토리를 기반으로 대화 응답을 생성하고 기록합니다.
@@ -102,7 +101,6 @@ async def send_message(session_key: str, user_text: str) -> str:
 
 
 async def _fix_prompt_with_llm(prompt: str) -> str:
-    """LLM을 사용하여 안전하고 긍정적인 프롬프트로 수정합니다."""
     try:
         resp = await client.aio.models.generate_content(
             model=settings.GEMINI_MODEL,
@@ -119,7 +117,6 @@ async def gen_two_images(
         retry: int = 0,
         max_retries: int = 1
 ) -> List[str]:
-    """이미지 두 장을 생성하고, 실패 시 LLM으로 프롬프트를 수정하여 재시도합니다."""
     if retry >= max_retries:
         print(f"[gen_two_images] 최대 재시도 횟수({max_retries}) 초과. 이미지 생성 최종 실패.")
         return []
@@ -154,13 +151,13 @@ async def gen_two_images(
                     urls.append(_save_bytes(part.inline_data.data))
                     success_count += 1
                     image_found_in_parts = True
-                    print(f"✅ 이미지 저장 성공 (크기: {len(part.inline_data.data)} 바이트)")
+                    print(f"이미지 저장 성공 (크기: {len(part.inline_data.data)} 바이트)")
 
             if not image_found_in_parts:
-                print(f"❌ 이미지 없음, 텍스트 응답: {getattr(resp, 'text', 'N/A')!r}")
+                print(f"이미지 없음, 텍스트 응답: {getattr(resp, 'text', 'N/A')!r}")
 
         except (AttributeError, IndexError) as e:
-            print(f"❌ 응답 파싱 오류: {e}. 받은 텍스트: {getattr(resp, 'text', 'N/A')!r}")
+            print(f"응답 파싱 오류: {e}. 받은 텍스트: {getattr(resp, 'text', 'N/A')!r}")
 
     if success_count < 2 and retry < max_retries:
         print(f"[gen_two_images] 일부 또는 전체 이미지 생성 실패. 프롬프트를 수정하여 재시도합니다.")

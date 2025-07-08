@@ -23,6 +23,11 @@ def init_story(request: Request, title: str, user_id: str = Depends(verify_token
 @router.get("/me/stories/{story_id}", response_model=StoryOutWithDetail)
 def get_story(story_id:int, request: Request, user_id: str = Depends(verify_token)):
     db = request.state.db
+    if not check_story_auth(db, story_id, user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="해당 스토리에 접근할 권한이 없습니다."
+        )
     story = get_story_by_story_id(db, story_id)
     return story
 

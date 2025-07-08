@@ -27,10 +27,12 @@ class State(Enum):
     CHOICE_WAIT    = auto()
     DRAFT_REVIEW   = auto()
     FINISHED       = auto()
+    QUIZ           = auto()
 
 
 class StorybookService:
     def __init__(self, session_key: str):
+        self.available_cmd = ["quiz", "scene"]
         self.session_key = session_key
         self.state       = State.ILLUST_INFO
         self.img_task: asyncio.Task = None  # type: ignore
@@ -57,8 +59,12 @@ class StorybookService:
         await ws.accept(subprotocol="jwt")
 
         start: ClientStart = await ws.receive_json()
-        if start.get("type") != "start":
-            raise WebSocketException(code=1003)
+        if start.get("type") not in self.available_cmd:
+            raise WebSocketException(code=1008)
+
+        if start.get("type") == "quiz":
+            self.state = State.QUIZ
+
         topic = start["text"]
 
         while True:
@@ -67,6 +73,7 @@ class StorybookService:
             elif self.state is State.ILLUST_WAIT:    await self._wait_for_images(ws)
             elif self.state is State.CHOICE_WAIT:    await self._handle_choice(ws)
             elif self.state is State.DRAFT_REVIEW:   await self._review_draft(ws)
+            elif self.state is State.QUIZ:           await self._quiz_loop(ws, topic)
 
             if self.state is State.FINISHED:
                 await ws.close()
@@ -172,6 +179,27 @@ class StorybookService:
         else:
             raise WebSocketException(code=1003)
 
+    async def _quiz_loop(self, ws: WebSocket,topic : str):
+        prompt = (
+            f"{topic}라는 동화에 대한 퀴즈를 내줘 무조건 초등학생 수준으로. 형식은 아래 형식을 무조건 따라"
+            "QUESTION: 여기에 질문을 적어주세요\n"
+            "EXAMPLES:\n"
+            "- 예시 A\n"
+            "- 예시 B\n"
+            "- 예시 C\n"
+            "- 예시 D\n\n"
+            f"대답에 대한 피드백을 해주고 다음 퀴즈를 계속 이어 내주세요"
+        )
+
+        txt = await send_message(self.session_key, prompt)
+
+        while True:
+            q, ex = self._parse_q_examples(txt)
+            await ws.send_json({"type": "question", "text": q, "examples": ex})
+
+            ans: ClientAnswer = await ws.receive_json()
+            txt = await send_message(self.session_key, ans["text"])
+
     def _parse_q_examples(self, txt: str) -> Tuple[str, List[str]]:
         lines = [line.strip() for line in txt.splitlines() if line.strip()]
         question = ""
@@ -192,3 +220,5 @@ class StorybookService:
             pass
 
         return question, examples
+
+

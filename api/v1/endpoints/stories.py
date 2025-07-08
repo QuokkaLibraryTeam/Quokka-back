@@ -8,7 +8,6 @@ from sevices.story import create_new_story, get_all_story, check_story_auth
 
 router = APIRouter()
 
-
 @router.post("/{story_id}/chat")
 async def init_chat(request: Request, story_id: int, user_id: str = Depends(verify_token)):
     db = request.state.db
