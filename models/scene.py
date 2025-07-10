@@ -9,7 +9,6 @@ from db.base import Base
 
 order_idx_seq = Sequence('scene_order_idx_seq', start=0, increment=1,minvalue=0)
 
-
 class Scene(Base):
     __tablename__ = "scenes"
 
