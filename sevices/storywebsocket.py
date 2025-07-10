@@ -51,7 +51,6 @@ class StorybookService:
         if self.session_key.split(":")[0] != user_id:
             raise WebSocketException(code=1008)
 
-        # Redis에 세션 메타가 존재하는지 확인
         if not await rds.exists(_meta(self.session_key)):
             raise WebSocketException(code=1008)
 
@@ -59,6 +58,7 @@ class StorybookService:
         await ws.accept(subprotocol="jwt")
 
         start: ClientStart = await ws.receive_json()
+        await append_history(self.session_key, "U", start.get("text", ""))
         if start.get("type") not in self.available_cmd:
             raise WebSocketException(code=1008)
 
@@ -83,19 +83,17 @@ class StorybookService:
         prompt = (
             f"{topic} 동화를 위한 삽화를 만들 거야.\n\n"
             "## 정보 요청 형식\n"
-            "LLM이 부족한 정보를 요청할 때는 반드시 아래 형식으로만 답해주세요.\n\n"
             "QUESTION: 여기에 질문을 적어주세요\n"
             "EXAMPLES:\n"
             "- 예시 1\n"
             "- 예시 2\n"
             "- 예시 3\n"
             "- 예시 4\n\n"
-            f"정보가 충분하면, 지금까지의 모든 묘사를 종합해서 하나의 완성된 그림 설명 문장으로 요약하고, "
-            f"그 뒤에 **{ILLUST_OK}** 를 붙여서 끝내세요."
+            f"정보가 충분하면, 완성된 그림 설명에 **{ILLUST_OK}** 를 붙여서 끝내세요."
         )
-
-        # send_message 하나로 요청 + 히스토리 관리
+        await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
+        await append_history(self.session_key, "AI", txt)
 
         while True:
             if ILLUST_OK in txt:
@@ -111,26 +109,34 @@ class StorybookService:
             await ws.send_json({"type": "question", "text": q, "examples": ex})
 
             ans: ClientAnswer = await ws.receive_json()
+            await append_history(self.session_key, "U", ans["text"])
             txt = await send_message(self.session_key, ans["text"])
+            await append_history(self.session_key, "AI", txt)
 
     async def _scene_synopsis_loop(self, ws: WebSocket):
         prompt = (
             "동화 한 씬을 풍부하게 묘사할 시놉시스를 삽화에 이어서 만들자.\n\n"
             "## 정보 요청 형식\n"
-            "LLM이 부족한 맥락을 더 물어야 할 때는 반드시 아래 형식으로만 답해주세요.\n\n"
             "QUESTION: 여기에 질문을 적어주세요\n"
             "EXAMPLES:\n"
             "- 예시 A\n"
             "- 예시 B\n"
             "- 예시 C\n"
             "- 예시 D\n\n"
-            f"시놉시스 작성이 완료되면 **{SCENE_OK}** 으로만 끝내주세요."
+            f"완료되면 **{SCENE_OK}** 으로만 끝내주세요."
         )
-
+        await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
+        await append_history(self.session_key, "AI", txt)
 
         while True:
             if SCENE_OK in txt:
+                prompt2 = (
+                    f"지금까지 너와 내가 만든 시놉시스를 통해 7줄의 동화를 만들어줘, 다른거 표기하지 말고, 오직 동화만 써서 줘, 숫자 나열도 필요 없어"
+                )
+                await append_history(self.session_key, "AI", prompt2)
+                txt = await send_message(self.session_key, prompt2)
+                await append_history(self.session_key, "AI", txt)
                 self.synopsis = txt.replace(SCENE_OK, "").strip()
                 self.state = State.ILLUST_WAIT
                 return
@@ -139,7 +145,9 @@ class StorybookService:
             await ws.send_json({"type": "question", "text": q, "examples": ex})
 
             ans: ClientAnswer = await ws.receive_json()
+            await append_history(self.session_key, "U", ans["text"])
             txt = await send_message(self.session_key, ans["text"])
+            await append_history(self.session_key, "AI", txt)
 
     async def _wait_for_images(self, ws: WebSocket):
         while True:
@@ -152,9 +160,8 @@ class StorybookService:
 
     async def _handle_choice(self, ws: WebSocket):
         choice: ClientChoice = await ws.receive_json()
-        if choice.get("type") != "choice":
-            raise WebSocketException(code=1003)
-        self.chosen_url = self.urls[choice["index"]]
+        await append_history(self.session_key, "U", choice["text"])
+        self.chosen_url = self.urls[choice["text"]]
         await ws.send_json({
             "type": "draft",
             "synopsis": self.synopsis,
@@ -164,6 +171,7 @@ class StorybookService:
 
     async def _review_draft(self, ws: WebSocket):
         cmd: ClientCmd = await ws.receive_json()
+        await append_history(self.session_key, "U", cmd.get("type", ""))
         if cmd.get("type") == "accept":
             scene_id = create_scene(
                 ws.state.db,
@@ -171,7 +179,8 @@ class StorybookService:
                 self.synopsis,
                 self.chosen_url
             )
-            await ws.send_json({"type": "final", "story_id": scene_id})
+            await ws.send_json({"type": "final"})
+            await append_history(self.session_key, "AI", "final")
             await mark_done(self.session_key)
             self.state = State.FINISHED
         elif cmd.get("type") == "retry":
@@ -179,26 +188,22 @@ class StorybookService:
         else:
             raise WebSocketException(code=1003)
 
-    async def _quiz_loop(self, ws: WebSocket,topic : str):
+    async def _quiz_loop(self, ws: WebSocket, topic: str):
         prompt = (
-            f"{topic}라는 동화에 대한 퀴즈를 내줘 무조건 초등학생 수준으로. 형식은 아래 형식을 무조건 따라"
-            "QUESTION: 여기에 질문을 적어주세요\n"
-            "EXAMPLES:\n"
-            "- 예시 A\n"
-            "- 예시 B\n"
-            "- 예시 C\n"
-            "- 예시 D\n\n"
-            f"대답에 대한 피드백을 해주고 다음 퀴즈를 계속 이어 내주세요"
+            f"{topic}라는 동화에 대한 퀴즈를 내줘 초등학생 수준으로..."
         )
-
+        await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
+        await append_history(self.session_key, "AI", txt)
 
         while True:
             q, ex = self._parse_q_examples(txt)
             await ws.send_json({"type": "question", "text": q, "examples": ex})
 
             ans: ClientAnswer = await ws.receive_json()
+            await append_history(self.session_key, "U", ans["text"])
             txt = await send_message(self.session_key, ans["text"])
+            await append_history(self.session_key, "AI", txt)
 
     def _parse_q_examples(self, txt: str) -> Tuple[str, List[str]]:
         lines = [line.strip() for line in txt.splitlines() if line.strip()]
@@ -220,5 +225,3 @@ class StorybookService:
             pass
 
         return question, examples
-
-

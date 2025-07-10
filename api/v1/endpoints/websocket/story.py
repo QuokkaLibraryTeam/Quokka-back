@@ -7,7 +7,7 @@ from db.base import get_db
 from sevices.storywebsocket import StorybookService
 router = APIRouter()
 
-@router.websocket("/create/{session_key}")
+@router.websocket("/{session_key}")
 async def storybook_ws(
     ws: WebSocket,
     session_key: str,
