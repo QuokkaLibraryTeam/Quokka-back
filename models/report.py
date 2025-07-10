@@ -8,8 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
-from user import User
-
 class Report(Base):
     __tablename__ = "reports"
 
@@ -20,4 +18,4 @@ class Report(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    reporter: Mapped[User] = relationship("User", back_populates="reports")
+    reporter: Mapped['User'] = relationship("User", back_populates="reports")

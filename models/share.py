@@ -8,9 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
-from story import Story
-from user import User
-
 class Share(Base):
     __tablename__ = "shares"
 
@@ -19,5 +16,5 @@ class Share(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    story: Mapped[Story] = relationship("Story", back_populates="shares")
-    user: Mapped[User] = relationship("User", back_populates="shares")
+    story: Mapped['Story'] = relationship("Story", back_populates="shares")
+    user: Mapped['User'] = relationship("User", back_populates="shares")

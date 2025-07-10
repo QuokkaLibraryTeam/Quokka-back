@@ -5,6 +5,8 @@ from api.v1.routers import router as v1_router  # 버전별 라우터
 from core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
 
+import models
+
 from db.base import get_db
 from db.base import Base, engine
 app = FastAPI(

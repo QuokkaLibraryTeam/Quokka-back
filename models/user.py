@@ -8,12 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import String, Integer, DateTime, ForeignKey
 from db.base import Base
 
-from story import Story
-from comment import Comment
-from like import Like
-from share import Share
-from report import Report
-
 class User(Base):
     __tablename__ = 'users'
 
@@ -22,8 +16,8 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    stories: Mapped[List[Story]] = relationship("Story", back_populates="author", cascade="all, delete-orphan")
-    comments: Mapped[List[Comment]] = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
-    likes: Mapped[List[Like]] = relationship("Like", back_populates="user", cascade="all, delete-orphan")
-    shares: Mapped[List[Share]] = relationship("Share", back_populates="user", cascade="all, delete-orphan")
-    reports: Mapped[List[Report]] = relationship("Report", back_populates="reporter", cascade="all, delete-orphan")
+    stories: Mapped[List["Story"]] = relationship("Story", back_populates="user", cascade="all, delete-orphan")
+    comments: Mapped[List['Comment']] = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
+    likes: Mapped[List['Like']] = relationship("Like", back_populates="user", cascade="all, delete-orphan")
+    shares: Mapped[List['Share']] = relationship("Share", back_populates="user", cascade="all, delete-orphan")
+    reports: Mapped[List['Report']] = relationship("Report", back_populates="reporter", cascade="all, delete-orphan")

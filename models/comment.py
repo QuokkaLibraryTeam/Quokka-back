@@ -8,9 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 
-from story import Story
-from user import User
-
 class Comment(Base):
     __tablename__ = "comments"
 
@@ -21,5 +18,5 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    story: Mapped[Story] = relationship("Story", back_populates="comments")
-    user: Mapped[User] = relationship("User", back_populates="comments")
+    story: Mapped['Story'] = relationship("Story", back_populates="comments")
+    user: Mapped['User'] = relationship("User", back_populates="comments")
