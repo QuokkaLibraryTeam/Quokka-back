@@ -4,18 +4,17 @@ from starlette import status
 from core.chat_manager import new_session
 from core.security import verify_token, decode_token
 from schemas.story import StoryOut, StoriesOut, StoryOutWithDetail
-from sevices.story import create_new_story, get_all_story, check_story_auth
+from sevices.story import create_new_story, get_all_story, check_story_auth, get_story_by_story_id
 
 router = APIRouter()
 
 @router.post("/{story_id}/chat")
 async def init_chat(request: Request, story_id: int, user_id: str = Depends(verify_token)):
     db = request.state.db
-    if not check_story_auth(db, story_id, user_id):
+    if not get_story_by_story_id(db, story_id).original and not check_story_auth(db, story_id, user_id):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     session_key = await new_session(user_id, story_id)
     return {"session_key": session_key}
-
 
 @router.get("/", response_model=StoriesOut)
 def list_stories(request: Request):

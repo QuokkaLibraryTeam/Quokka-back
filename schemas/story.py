@@ -62,8 +62,8 @@ class ClientAnswer(TypedDict):
 
 class ClientChoice(TypedDict):
     type: str
-    index: int
+    text: int
 
 
 class ClientCmd(TypedDict):
-    type: str  # "accept" / "retry"
+    type: str

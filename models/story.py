@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Column
+from sqlalchemy import String, Integer, DateTime, ForeignKey, Column, Boolean
 
 from db.base import Base
 
@@ -14,7 +14,7 @@ class Story(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[str] = Column(Integer, ForeignKey("users.id"))
     user: Mapped[str] = relationship("User", back_populates="stories")
-
+    original :Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     title: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
