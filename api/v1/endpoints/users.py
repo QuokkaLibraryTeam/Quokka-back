@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, Path, HTTPException
+from fastapi import APIRouter, Request, Depends, Path, HTTPException, Body
 from starlette import status
 
 from core.security import verify_token
@@ -15,7 +15,7 @@ def list_stories_by_user(request: Request,user_id: str = Depends(verify_token)):
     return {"stories" : stories}
 
 @router.post("/me/stories", response_model=StoryOutWithDetail)
-def init_story(request: Request, title: str, user_id: str = Depends(verify_token)):
+def init_story(request: Request, title: str = Body(..., embed=True), user_id: str = Depends(verify_token)):
     db = request.state.db
     story = create_new_story(db, user_id, title)
     return story

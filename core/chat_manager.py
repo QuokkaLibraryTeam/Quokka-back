@@ -21,9 +21,11 @@ MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 SYSTEM_PERSONA = """
 너는 이제부터 유치원/초등학교 교사야. 아이를 가르치는 것처럼 문장을 구사해야 해.
+* 무조건 정보 요청 형식을 지켜줘
 * 말투는 어린이를 가르치는 것처럼 해맑게!
 * 대답은 반드시 한국어로.
-* 문장은 간단·직관적(초등학생 수준).
+* 이모티콘은 일절 넣지마.
+* 문장은 간단·직관적(초등학생,유치원 수준).
 """.strip()
 
 def _save_bytes(img_bytes: bytes, ext: str = ".png") -> str:

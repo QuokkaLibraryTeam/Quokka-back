@@ -1,4 +1,5 @@
 import asyncio
+import re
 from enum import Enum, auto
 from typing import List, Tuple
 
@@ -15,6 +16,7 @@ from core.chat_manager import (
 from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
+from sevices.story import get_story_by_story_id
 
 ILLUST_OK = "__ILLUST_OK__"
 SCENE_OK   = "__SCENE_OK__"
@@ -53,8 +55,10 @@ class StorybookService:
 
         if start.get("type") == "quiz":
             self.state = State.QUIZ
+            topic = ""
 
-        topic = start["text"]
+        else:
+            topic = start["text"]
 
         while True:
             if   self.state is State.ILLUST_INFO:    await self._illust_info_loop(ws, topic)
@@ -62,7 +66,7 @@ class StorybookService:
             elif self.state is State.ILLUST_WAIT:    await self._wait_for_images(ws)
             elif self.state is State.CHOICE_WAIT:    await self._handle_choice(ws)
             elif self.state is State.DRAFT_REVIEW:   await self._review_draft(ws)
-            elif self.state is State.QUIZ:           await self._quiz_loop(ws, topic)
+            elif self.state is State.QUIZ:           await self._quiz_loop(ws)
 
             if self.state is State.FINISHED:
                 await ws.close()
@@ -177,21 +181,40 @@ class StorybookService:
         else:
             raise WebSocketException(code=1003)
 
-    async def _quiz_loop(self, ws: WebSocket, topic: str):
+    async def _quiz_loop(self, ws: WebSocket):
+        topic = get_story_by_story_id(ws.state.db,int(self.session_key.split(":")[1])).title
+
         prompt = (
-            f"{topic}라는 동화에 대한 퀴즈를 내줘 초등학생 수준으로..."
+            f"{topic}라는 동화에 대한 퀴즈를 하나씩 내줘 초등학생 수준으로... 질문과 선지 4개를 제공 해. 양식대로 질문을 제공해"
+            "## 정보 요청 형식\n"
+            "QUESTION: 여기에 질문을 적어주세요\n"
+            "EXAMPLES:\n"
+            "- 예시 A\n"
+            "- 예시 B\n"
+            "- 예시 C\n"
+            "- 예시 D\n\n"
+            "위 양식을 꼭 지켜, 예시는 -로 구분해, ** 빼"
         )
         await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
         await append_history(self.session_key, "AI", txt)
-
+        print(txt)
         while True:
             q, ex = self._parse_q_examples(txt)
             await ws.send_json({"type": "question", "text": q, "examples": ex})
 
             ans: ClientAnswer = await ws.receive_json()
+            prompt = (
+                f"내 답은 :{ans['text']}"
+                "내 답에 대해 피드백을 해줘"
+            )
+            txt = await send_message(self.session_key, prompt)
+            await ws.send_json({"type": "feedback", "text": txt})
+            prompt = (
+                f"고마워 이제 다음 퀴즈 똑같이 이어가줘"
+            )
+            txt = await send_message(self.session_key, prompt)
             await append_history(self.session_key, "U", ans["text"])
-            txt = await send_message(self.session_key, ans["text"])
             await append_history(self.session_key, "AI", txt)
 
     def _parse_q_examples(self, txt: str) -> Tuple[str, List[str]]:
@@ -200,6 +223,7 @@ class StorybookService:
         examples: List[str] = []
 
         for line in lines:
+            line = re.sub(r"\*","",line)
             if line.upper().startswith("QUESTION:"):
                 question = line[len("QUESTION:"):].strip()
                 break
