@@ -6,7 +6,9 @@ from starlette.staticfiles import StaticFiles
 from api.v1.routers import router as v1_router  # 버전별 라우터
 from core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+import os
 import models
 
 from db.base import get_db
@@ -44,6 +46,22 @@ async def db_session_middleware(request: Request, call_next):
         gen.close()
     return response
 
+@app.get(
+    "/illustrations/{filename:path}",
+    response_class=FileResponse,
+    include_in_schema=True,
+    summary="Illustration 이미지 반환",
+    description="static/illustrations 폴더 내 이미지를 파일로 반환합니다."
+)
+async def get_illustration(filename: str):
+    base = os.path.abspath("static/illustrations")
+    path = os.path.abspath(os.path.join(base, filename))
+    # 디렉터리 벗어남 방지
+    if not path.startswith(base):
+        raise HTTPException(status_code=400, detail="Invalid path")
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path, media_type="image/*")
 # 라우터 등록
 app.include_router(v1_router, prefix="/api/v1")
 
