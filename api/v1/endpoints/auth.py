@@ -14,6 +14,7 @@ from core.config import get_settings
 
 from models.user import User
 from db.base import get_db
+from schemas.auth import AuthResponse
 
 router = APIRouter()
 settings = get_settings()
@@ -44,7 +45,7 @@ async def login():
         
     return {"auth_url": f"{settings.GOOGLE_AUTH_ENDPOINT}?{query}"}
 
-@router.get("/callback")
+@router.get("/callback",response_model=AuthResponse)
 def callback(code: str, db: Session = Depends(get_db)):
     # 1. code → access_token 교환
     token_res = requests.post(settings.GOOGLE_TOKEN_ENDPOINT, data={
