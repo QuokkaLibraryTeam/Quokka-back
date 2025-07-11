@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash"
     REDIS_URL: str = Field(..., description="Redis 연결 URL")
 
+    # OAuth 관련
+    GOOGLE_CLIENT_ID: str = Field(..., description="OAuth google 클라이언트")
+    GOOGLE_CLIENT_SECRET: str = Field(..., description="OAuth 비밀키")
+    REDIRECT_URL: str = Field(..., description="OAuth 리다이렉트 URL")
+    GOOGLE_AUTH_ENDPOINT: str = Field(..., description="OAuth 엔드포인트")
+    GOOGLE_USERINFO_ENDPOINT: str = Field(..., description="OAuth 유저 엔드포인트")
+    GOOGLE_TOKEN_ENDPOINT: str = Field(..., description="OAuth callback 핸들러 code to access_token")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
