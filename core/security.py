@@ -2,14 +2,14 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Security
+from fastapi.security import HTTPBearer
 
 from core.config import get_settings
 
 settings = get_settings()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+oauth2_scheme = HTTPBearer()
 
 
 def create_access_token(subject: str,
@@ -39,5 +39,5 @@ def decode_token(token: str) -> str:
         )
 
 
-def verify_token(token: str = Depends(oauth2_scheme)) -> str:
+def verify_token(token: str = Security(oauth2_scheme)) -> str:
     return decode_token(token)

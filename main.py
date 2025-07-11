@@ -1,6 +1,8 @@
 # app/main.py
 
 from fastapi import FastAPI, Request
+from starlette.staticfiles import StaticFiles
+
 from api.v1.routers import router as v1_router  # 버전별 라우터
 from core.config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +25,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.mount(
+    "/illustrations",
+    StaticFiles(directory="static/illustrations"),
+    name="illustrations"
 )
 
 @app.middleware("http")
