@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from urllib.parse import urlencode
 
-from core.security import create_access_token
+from core.security import create_access_token, verify_token
 from core.config import get_settings
 
 from models.user import User
@@ -54,8 +54,6 @@ def callback(code: str, db: Session = Depends(get_db)):
         "redirect_uri": settings.REDIRECT_URL,
         "grant_type": "authorization_code",
     })
-    print("🔴 token_res.status_code:", token_res.status_code)
-    print("🔴 token_res.json():", token_res.json())
 
     if not token_res.ok:
         raise HTTPException(status_code=400, detail="토큰 요청 실패")
@@ -72,6 +70,7 @@ def callback(code: str, db: Session = Depends(get_db)):
 
     userinfo = userinfo_res.json()
     google_id = userinfo["id"]
+    nickname = userinfo.get("name")  # ← 닉네임 (이름) 가져오기
 
     # 3. DB에 사용자 저장 또는 조회
     user = db.query(User).filter_by(google_id=google_id).first()
@@ -91,4 +90,20 @@ def callback(code: str, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer",
         "user_id": str(user.id),
+        "nickname": nickname,  # ← 응답에 포함
+    }
+
+@router.get("/me")
+async def me(
+    user_id: str = Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "user_id": user.id,
+        "google_id": user.google_id,
+        "created_at": user.created_at.isoformat(),
     }
