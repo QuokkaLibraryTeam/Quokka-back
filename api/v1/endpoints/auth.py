@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from urllib.parse import urlencode
 
+from starlette.responses import RedirectResponse
+
 from core.security import create_access_token, verify_token
 from core.config import get_settings
 
@@ -45,7 +47,7 @@ async def login():
         
     return {"auth_url": f"{settings.GOOGLE_AUTH_ENDPOINT}?{query}"}
 
-@router.get("/callback",response_model=AuthResponse)
+@router.get("/callback")
 def callback(code: str, db: Session = Depends(get_db)):
     # 1. code → access_token 교환
     token_res = requests.post(settings.GOOGLE_TOKEN_ENDPOINT, data={
@@ -86,13 +88,9 @@ def callback(code: str, db: Session = Depends(get_db)):
         db.refresh(user)
 
     access_token = create_access_token(subject=str(user.id))
+    frontend_callback_url = f"http://localhost:3000/auth/callback?access_token={access_token}&nickname={nickname}"
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_id": str(user.id),
-        "nickname": nickname,  # ← 응답에 포함
-    }
+    return RedirectResponse(url=frontend_callback_url)
 
 @router.get("/me")
 async def me(
