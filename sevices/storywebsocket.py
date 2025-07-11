@@ -7,12 +7,12 @@ from fastapi import WebSocket, WebSocketException
 
 from core.chat_manager import (
     send_message,
-    gen_two_images,
     append_history,
     mark_done,
     rds,
     _meta
 )
+from core.image_manager import gen_two_images
 from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
@@ -74,7 +74,7 @@ class StorybookService:
 
     async def _illust_info_loop(self, ws: WebSocket, topic: str):
         prompt = (
-            f"{topic} 동화를 위한 삽화를 만들 거야.\n\n"
+            f"{topic} 동화를 위한 삽화를 만들 거야.\n\n 질문은 무조건 하나씩 해줘, 예시가 너무 길지 않게 주의 해줘"
             "## 정보 요청 형식\n"
             "QUESTION: 여기에 질문을 적어주세요\n"
             "EXAMPLES:\n"
@@ -87,8 +87,8 @@ class StorybookService:
         await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
         await append_history(self.session_key, "AI", txt)
-
         while True:
+            print(txt)
             if ILLUST_OK in txt:
                 illust_prompt = txt.replace(ILLUST_OK, "").strip()
                 if illust_prompt:

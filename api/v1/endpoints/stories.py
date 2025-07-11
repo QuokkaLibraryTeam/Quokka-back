@@ -8,7 +8,7 @@ from sevices.story import create_new_story, get_all_story, check_story_auth, get
 
 router = APIRouter()
 
-@router.post("/{story_id}/chat")
+@router.get("/{story_id}/chat")
 async def init_chat(request: Request, story_id: int, user_id: str = Depends(verify_token)):
     db = request.state.db
     if not get_story_by_story_id(db, story_id).original and not check_story_auth(db, story_id, user_id):
