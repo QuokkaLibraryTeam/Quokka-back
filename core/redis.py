@@ -78,7 +78,6 @@ async def connect_ws(room_code: str, ws: WebSocket) -> None:
         await ws.close(code=1008, reason="Invalid room code")
         return
 
-    await ws.accept()
     peers = LOCAL_PEERS.setdefault(room_code, set())
     peers.add(ws)
     await ensure_listener(room_code)

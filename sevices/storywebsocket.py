@@ -40,21 +40,10 @@ class StorybookService:
         self.chosen_url: str = ""
         self.synopsis: str   = ""
 
-    async def authenticate(self, ws: WebSocket):
-        subs = ws.scope.get("subprotocols", [])
-        if len(subs) != 2 or subs[0] != "jwt":
-            raise WebSocketException(code=1008)
-        try:
-            user_id = decode_token(subs[1])
-        except Exception:
-            raise WebSocketException(code=1008)
-        if self.session_key.split(":")[0] != user_id:
-            raise WebSocketException(code=1008)
-
+    async def handle(self, ws: WebSocket):
         if not await rds.exists(_meta(self.session_key)):
             raise WebSocketException(code=1008)
 
-    async def handle(self, ws: WebSocket):
         await ws.accept(subprotocol="jwt")
 
         start: ClientStart = await ws.receive_json()

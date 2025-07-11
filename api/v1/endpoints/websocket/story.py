@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from db.base import get_db
 from sevices.storywebsocket import StorybookService
+from sevices.websocket import authenticate
+
 router = APIRouter()
 
 @router.websocket("/{session_key}")
@@ -16,7 +18,9 @@ async def storybook_ws(
     service = StorybookService(session_key)
     ws.state.db = db
     try:
-        await service.authenticate(ws)
+        user_id = await authenticate(ws)
+        if session_key.split(":")[0] != user_id:
+            raise WebSocketException(code=1008)
         await service.handle(ws)
     except WebSocketException as e:
         await ws.close(code=e.code)
