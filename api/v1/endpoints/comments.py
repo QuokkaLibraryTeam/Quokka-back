@@ -64,7 +64,7 @@ def get_comments(story_id: UUID, db: Session = Depends(get_db)):
         for comment in comments
     ]
 
-@router.update("/community/comment/{comment_id}")
+@router.put("/community/comment/{comment_id}")
 def update_comment(
     comment_id: int,
     data: CommentUpdate,
