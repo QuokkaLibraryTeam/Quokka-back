@@ -19,8 +19,118 @@ from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
 from sevices.story import get_story_by_story_id
 
+# ────────────────────────────────────────────────
+# 0. 공통 고정 블록
+PROMPT_STATIC = """
+[역할]
+- 너는 유치원·초등학교 선생님이야. 밝고 친절하게 설명해.
+
+[문체]
+- 한국어만 사용해.
+- 문장은 짧고 직관적으로 써.
+- 이모티콘·이모지는 절대 쓰지 마.
+
+[정보 요청 규칙]
+- 질문은 한 번에 하나만.
+- ‘QUESTION:’ 뒤에 질문 한 줄.
+- 바로 이어서 ‘EXAMPLES:’ 아래 보기 예시 4줄(‘- ’로 시작).
+- 예시는 짧게.
+
+[확실성 표기]
+- 모르면 “모르겠습니다”.
+- 추측이면 “추측입니다”라고 밝히고 이유 한 줄.
+- 출처가 불분명하면 “확실하지 않음”.
+"""
+# ────────────────────────────────────────────────
+
+
+# 1. 삽화 정보 수집용 프롬프트
+def build_illust_info_prompt(topic: str, marker: str) -> str:
+    return (
+        PROMPT_STATIC
+        + f"""
+[목표]
+- “{topic}” 동화를 위한 삽화 정보를 모은다.
+- 정보가 모두 모이면 마지막 줄에 **{marker}** 를 붙인 뒤
+  4:3 비율 삽화 설명문을 완성한다.
+
+[정보 요청 형식]
+QUESTION: 여기에 질문을 적어 주세요
+EXAMPLES:
+- 예시 1
+- 예시 2
+- 예시 3
+- 예시 4
+"""
+    )
+
+
+# 2. 씬 시놉시스 Q&A 프롬프트
+def build_scene_synopsis_prompt(marker: str) -> str:
+    return (
+        PROMPT_STATIC
+        + f"""
+[목표]
+- 삽화를 바탕으로 동화 한 씬을 풍부하게 묘사할 시놉시스를 완성한다.
+- 정보가 충분하면 마지막 줄에 **{marker}** 만 남긴다.
+
+[정보 요청 형식]
+QUESTION: 여기에 질문을 적어 주세요
+EXAMPLES:
+- 예시 A
+- 예시 B
+- 예시 C
+- 예시 D
+"""
+    )
+
+
+# 3. 7줄 동화 생성 지시
+STORY_7_LINES_PROMPT = """
+[지시]
+지금까지 만든 시놉시스를 바탕으로 동화 본문을 7줄만 써 줘.
+- 숫자·머리표·특수기호 없이 한 줄에 한 문장만.
+- 문장은 초등학생이 읽기 쉽게.
+- 이모티콘 금지.
+"""
+
+
+# 4. 퀴즈 문제 출제 프롬프트
+def build_quiz_question_prompt(title: str) -> str:
+    return (
+        PROMPT_STATIC
+        + f"""
+[목표]
+- “{title}” 동화에 대한 초등학생용 퀴즈를 한 문제씩 낸다.
+
+[출제 형식]
+QUESTION: 문제를 한 문장으로
+EXAMPLES:
+- 보기 1
+- 보기 2
+- 보기 3
+- 보기 4
+"""
+    )
+
+
+# 5. 정답 피드백 프롬프트
+def build_quiz_feedback_prompt(user_answer: str) -> str:
+    return (
+        PROMPT_STATIC
+        + f"""
+[상황]
+내 답은 “{user_answer}”이야.
+
+[지시]
+- 맞았는지 틀렸는지 알려 줘.
+- 이유를 한두 문장으로 설명해 줘.
+"""
+    )
+
+
 ILLUST_OK = "ILLUST_OK"
-SCENE_OK   = "SCENE_OK"
+SCENE_OK  = "SCENE_OK"
 
 
 class State(Enum):
@@ -31,6 +141,7 @@ class State(Enum):
     DRAFT_REVIEW   = auto()
     FINISHED       = auto()
     QUIZ           = auto()
+    EXTEND         = auto()
 
 
 class StorybookService:
@@ -38,7 +149,7 @@ class StorybookService:
         self.available_cmd = ["quiz", "scene"]
         self.session_key = session_key
         self.state       = State.ILLUST_INFO
-        self.img_task: asyncio.Task = None  # type: ignore
+        self.img_task: asyncio.Task | None = None
         self.urls: List[str] = []
         self.chosen_url: str = ""
         self.synopsis: str   = ""
@@ -54,12 +165,9 @@ class StorybookService:
         if start.get("type") not in self.available_cmd:
             raise WebSocketException(code=1008)
 
+        topic = "" if start.get("type") == "quiz" else start["text"]
         if start.get("type") == "quiz":
             self.state = State.QUIZ
-            topic = ""
-
-        else:
-            topic = start["text"]
 
         while True:
             if   self.state is State.ILLUST_INFO:    await self._illust_info_loop(ws, topic)
@@ -68,28 +176,21 @@ class StorybookService:
             elif self.state is State.CHOICE_WAIT:    await self._handle_choice(ws)
             elif self.state is State.DRAFT_REVIEW:   await self._review_draft(ws)
             elif self.state is State.QUIZ:           await self._quiz_loop(ws)
+            elif self.state is State.EXTEND:         await self._illust_info_loop(ws,"이제 다음 씬을 만들 준비를 해야해. 똑같은 방법으로 씬을 만들어내면 돼 \n")
 
             if self.state is State.FINISHED:
                 await ws.close()
                 break
 
+    # ────────────────────────────────────────────
+    # ILLUST_INFO 단계
     async def _illust_info_loop(self, ws: WebSocket, topic: str):
-        prompt = (
-            f"{topic} 동화를 위한 삽화를 만들 거야.\n\n 질문은 무조건 하나씩 해줘, 예시가 너무 길지 않게 주의 해줘"
-            "## 정보 요청 형식\n"
-            "QUESTION: 여기에 질문을 적어주세요\n"
-            "EXAMPLES:\n"
-            "- 예시 1\n"
-            "- 예시 2\n"
-            "- 예시 3\n"
-            "- 예시 4\n\n"
-            f"정보가 충분하면, 완성된 그림 설명에 **{ILLUST_OK}** 를 붙여서 끝내세요."
-        )
+        prompt = build_illust_info_prompt(topic, ILLUST_OK)
         await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
         await append_history(self.session_key, "AI", txt)
+
         while True:
-            print(txt)
             if ILLUST_OK in txt:
                 illust_prompt = txt.replace(ILLUST_OK, "").strip()
                 if illust_prompt:
@@ -107,29 +208,18 @@ class StorybookService:
             txt = await send_message(self.session_key, ans["text"])
             await append_history(self.session_key, "AI", txt)
 
+    # ────────────────────────────────────────────
+    # SCENE_SYNOPSIS 단계
     async def _scene_synopsis_loop(self, ws: WebSocket):
-        prompt = (
-            "동화 한 씬을 풍부하게 묘사할 시놉시스를 삽화에 이어서 만들자.\n\n"
-            "## 정보 요청 형식\n"
-            "QUESTION: 여기에 질문을 적어주세요\n"
-            "EXAMPLES:\n"
-            "- 예시 A\n"
-            "- 예시 B\n"
-            "- 예시 C\n"
-            "- 예시 D\n\n"
-            f"완료되면 **{SCENE_OK}** 으로만 끝내주세요."
-        )
+        prompt = build_scene_synopsis_prompt(SCENE_OK)
         await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
         await append_history(self.session_key, "AI", txt)
 
         while True:
             if SCENE_OK in txt:
-                prompt2 = (
-                    f"지금까지 너와 내가 만든 시놉시스를 통해 7줄의 동화를 만들어줘, 다른거 표기하지 말고, 오직 동화만 써서 줘, 숫자 나열도 필요 없어"
-                )
-                await append_history(self.session_key, "AI", prompt2)
-                txt = await send_message(self.session_key, prompt2)
+                await append_history(self.session_key, "AI", STORY_7_LINES_PROMPT)
+                txt = await send_message(self.session_key, STORY_7_LINES_PROMPT)
                 refined_txt = send_clova_chat(txt)
                 await append_history(self.session_key, "AI", txt)
                 self.synopsis = refined_txt
@@ -144,6 +234,8 @@ class StorybookService:
             txt = await send_message(self.session_key, ans["text"])
             await append_history(self.session_key, "AI", txt)
 
+    # ────────────────────────────────────────────
+    # 일러스트 생성 대기
     async def _wait_for_images(self, ws: WebSocket):
         while True:
             if self.img_task and self.img_task.done():
@@ -153,6 +245,8 @@ class StorybookService:
                 return
             await asyncio.sleep(0.3)
 
+    # ────────────────────────────────────────────
+    # 사용자가 일러스트 선택
     async def _handle_choice(self, ws: WebSocket):
         choice: ClientChoice = await ws.receive_json()
         await append_history(self.session_key, "U", choice["text"])
@@ -164,6 +258,8 @@ class StorybookService:
         })
         self.state = State.DRAFT_REVIEW
 
+    # ────────────────────────────────────────────
+    # 초안 검토
     async def _review_draft(self, ws: WebSocket):
         cmd: ClientCmd = await ws.receive_json()
         await append_history(self.session_key, "U", cmd.get("type", ""))
@@ -183,54 +279,43 @@ class StorybookService:
         else:
             raise WebSocketException(code=1003)
 
+    # ────────────────────────────────────────────
+    # QUIZ 단계
     async def _quiz_loop(self, ws: WebSocket):
-        topic = get_story_by_story_id(ws.state.db,int(self.session_key.split(":")[1])).title
-
-        prompt = (
-            f"{topic}라는 동화에 대한 퀴즈를 하나씩 내줘 초등학생 수준으로... 질문과 선지 4개를 제공 해. 양식대로 질문을 제공해"
-            "## 정보 요청 형식\n"
-            "QUESTION: 여기에 질문을 적어주세요\n"
-            "EXAMPLES:\n"
-            "- 예시 A\n"
-            "- 예시 B\n"
-            "- 예시 C\n"
-            "- 예시 D\n\n"
-            "위 양식을 꼭 지켜, 예시는 -로 구분해, ** 빼"
-        )
+        title = get_story_by_story_id(ws.state.db, int(self.session_key.split(":")[1])).title
+        prompt = build_quiz_question_prompt(title)
         await append_history(self.session_key, "AI", prompt)
         txt = await send_message(self.session_key, prompt)
         await append_history(self.session_key, "AI", txt)
-        print(txt)
+
         while True:
             q, ex = self._parse_q_examples(txt)
             await ws.send_json({"type": "question", "text": q, "examples": ex})
 
             ans: ClientAnswer = await ws.receive_json()
-            prompt = (
-                f"내 답은 :{ans['text']}"
-                "내 답에 대해 피드백을 해줘"
-            )
-            txt = await send_message(self.session_key, prompt)
+            feedback_prompt = build_quiz_feedback_prompt(ans["text"])
+            txt = await send_message(self.session_key, feedback_prompt)
             await ws.send_json({"type": "feedback", "text": txt})
-            prompt = (
-                f"고마워 이제 다음 퀴즈 똑같이 이어가줘"
-            )
-            txt = await send_message(self.session_key, prompt)
+
+            next_prompt = "다음 문제를 이어서 내 줘."
+            txt = await send_message(self.session_key, next_prompt)
             await append_history(self.session_key, "U", ans["text"])
             await append_history(self.session_key, "AI", txt)
 
+    # ────────────────────────────────────────────
+    # QUESTION / EXAMPLES 파싱
     def _parse_q_examples(self, txt: str) -> Tuple[str, List[str]]:
         lines = [line.strip() for line in txt.splitlines() if line.strip()]
         question = ""
         examples: List[str] = []
 
         for line in lines:
-            line = re.sub(r"\*","",line)
+            line = re.sub(r"\*", "", line)
             if line.upper().startswith("QUESTION:"):
                 question = line[len("QUESTION:"):].strip()
                 break
         try:
-            idx = [line.upper().strip() for line in lines].index("EXAMPLES:")
+            idx = [l.upper() for l in lines].index("EXAMPLES:")
             for example_line in lines[idx + 1:]:
                 if example_line.startswith("-"):
                     examples.append(example_line[1:].strip())
