@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import uuid
 from datetime import datetime
 from typing import List, Optional, TypedDict
 
@@ -29,7 +31,7 @@ class SceneOut(BaseModel):
 
 class StoryOutWithDetail(BaseModel):
     id: int
-    user_id: str
+    user_id: uuid.UUID
     title: str
     created_at: datetime
     updated_at: Optional[datetime]
@@ -46,7 +48,6 @@ class StoryOut(BaseModel):
 
 class StoriesOut(BaseModel):
     stories: List[StoryOut]
-
     model_config = ConfigDict(from_attributes=True)
 
 

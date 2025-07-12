@@ -12,6 +12,7 @@ from core.chat_manager import (
     rds,
     _meta
 )
+from core.cluade import refine_with_claude_sonnet35
 from core.image_manager import gen_two_images
 from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
@@ -129,8 +130,9 @@ class StorybookService:
                 )
                 await append_history(self.session_key, "AI", prompt2)
                 txt = await send_message(self.session_key, prompt2)
+                refined_txt = refine_with_claude_sonnet35(txt)
                 await append_history(self.session_key, "AI", txt)
-                self.synopsis = txt.replace(SCENE_OK, "").strip()
+                self.synopsis = refined_txt
                 self.state = State.ILLUST_WAIT
                 return
 
