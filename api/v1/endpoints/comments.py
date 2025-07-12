@@ -7,7 +7,6 @@ from models.comment import Comment
 from models.story import Story
 from models.user import User
 from schemas.comment import CommentCreate, CommentOut, CommentUpdate
-from uuid import UUID
 from typing import List
 from core.security import verify_token
 
@@ -39,7 +38,7 @@ def post_comment(
     return {"message": "리뷰이 성공적으로 등록되었습니다.", "comment_id": comment.id}
 
 @router.get("/community/comment/{story_id}", response_model=List[CommentOut])
-def get_comments(story_id: UUID, db: Session = Depends(get_db)):
+def get_comments(story_id: int, db: Session = Depends(get_db)):
     # 스토리 존재 여부 확인
     story = db.query(Story).filter_by(id=story_id).first()
     if not story:

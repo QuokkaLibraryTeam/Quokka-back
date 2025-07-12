@@ -12,7 +12,7 @@ class Share(Base):
     __tablename__ = "shares"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    story_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stories.id"), nullable=False)
+    story_id: Mapped[int] = mapped_column(ForeignKey("stories.id"), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

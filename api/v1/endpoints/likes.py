@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from uuid import UUID
 from datetime import datetime
 
 from db.base import get_db
@@ -12,7 +11,7 @@ router = APIRouter()
 
 @router.post("/community/like/{story_id}")
 def like_story(
-    story_id: UUID,
+    story_id: int,
     user_id: str = Depends(verify_token),
     db: Session = Depends(get_db)
 ):
@@ -37,7 +36,7 @@ def like_story(
 
 @router.delete("/community/like/{story_id}")
 def unlike_story(
-    story_id: UUID,
+    story_id: int,
     user_id: str = Depends(verify_token),
     db: Session = Depends(get_db)
 ):
@@ -54,7 +53,7 @@ def unlike_story(
 
 # 좋아요 개수 확인
 @router.get("/community/like/{story_id}")
-def count_likes(story_id: UUID, db: Session = Depends(get_db)):
+def count_likes(story_id: int, db: Session = Depends(get_db)):
     count = db.query(Like).filter_by(story_id=story_id).count()
     return {
         "story_id": story_id, 

@@ -4,14 +4,14 @@ from uuid import UUID
 from datetime import datetime
 
 class ReportCreate(BaseModel):
-    story_id: Optional[UUID]
+    story_id: Optional[int]
     comment_id: Optional[int]
     reason: str
 
 class ReportOut(BaseModel):
     id: int
     reporter_id: UUID
-    story_id: Optional[UUID]
+    story_id: Optional[int]
     comment_id: Optional[int]
     reason: str
     created_at: datetime
