@@ -1,3 +1,6 @@
+import time
+from time import sleep
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.params import Depends
 import json
@@ -168,7 +171,6 @@ async def close_room_by_code(room_code: str) -> bool:
         return False
 
     await broadcast(room_code, {"type": "close_room", "text": "방이 관리자에 의해 종료되었습니다."})
-
     async with rds.pipeline(transaction=True) as pipe:
         pipe.srem(ROOMS_KEY, room_code)
         pipe.delete(_users_key(room_code), _hist(room_code), _meta(room_code))

@@ -89,6 +89,7 @@ def callback(code: str, db: Session = Depends(get_db)):
         db.refresh(user)
 
     access_token = create_access_token(subject=str(user.id))
+    print(access_token)
     frontend_callback_url = f"http://localhost:3000/auth/callback?access_token={access_token}&nickname={nickname}"
 
     return RedirectResponse(url=frontend_callback_url)
