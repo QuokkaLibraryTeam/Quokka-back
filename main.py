@@ -12,8 +12,16 @@ from admin.views.auth import router as auth_router
 from api.v1.routers import router as v1_router
 import os
 
+from core.config import get_settings
+
 settings = get_settings()
-app = FastAPI(title="quokkalib", version="1.0.1")
+
+from db.base import get_db
+from db.base import Base, engine
+app = FastAPI(
+    title="quokkalib",
+    version="1.0.1"
+)
 
 # DB 초기화
 Base.metadata.create_all(bind=engine)
