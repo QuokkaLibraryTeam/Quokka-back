@@ -6,6 +6,7 @@ from typing import List
 from google import genai
 from google.genai import types
 
+from core.chat_manager import send_message
 from core.config import get_settings
 
 MEDIA_DIR = pathlib.Path("static/illustrations")
@@ -16,6 +17,18 @@ settings = get_settings()
 client = genai.Client(api_key=settings.GEMINI_API_KEY,
                       http_options=types.HttpOptions(api_version="v1beta"))
 
+IMAGE_PROMPT_PREFIX = """
+[스타일]
+- 색감은 부드럽고 자연스러워야 해
+- 4:3 비율로 그려
+
+[금지 사항]
+- 이미지 안에 글씨, 텍스트, 로고, 서명은 절대 넣지 마
+- 과도한 필터나 노이즈를 넣지 마
+
+[목표]
+- 어린이가 보는 동화 삽화를 만든다
+"""
 
 def _save_bytes(img_bytes: bytes, ext: str = ".png") -> str:
     name = f"{uuid.uuid4().hex}{ext}"
@@ -25,11 +38,8 @@ def _save_bytes(img_bytes: bytes, ext: str = ".png") -> str:
 
 async def _fix_prompt_with_llm(prompt: str) -> str:
     try:
-        resp = await client.aio.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=f"다음 문장을 아이에게 보여줄 동화 그림으로 만들기에 적합하도록, 폭력적/선정적이지 않고 긍정적인 표현으로 바꿔줘: {prompt}"
-        )
-        return resp.text.strip() or prompt
+        resp = await send_message(str(uuid.uuid4()), f"다음 문장을 아이에게 보여줄 동화 그림으로 만들기에 적합하도록, 폭력적/선정적이지 않고 긍정적인 표현으로 바꿔줘: {prompt}")
+        return resp
     except Exception:
         return prompt
 
@@ -42,12 +52,8 @@ async def gen_two_images(
     if retry >= max_retries:
         return []
 
-    image_prompt = f"""한 편의 지브리 애니메이션의 스틸컷처럼, 주제에 알맞는 분위기로 동화 삽화를 그려줘
-
-    주제: {prompt}
-
-    * 4:3 비율
-    * 이미지 내 어떠한 글씨, 텍스트, 로고, 서명도 절대 금지"""
+    re_prompt = f"\n[그려줘]\n{prompt}"
+    image_prompt = IMAGE_PROMPT_PREFIX + re_prompt
 
     config = types.GenerateContentConfig(response_modalities=["Text", "Image"])
     tasks = [

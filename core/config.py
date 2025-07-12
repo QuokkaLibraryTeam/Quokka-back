@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
 
     GEMINI_API_KEY: str = Field(..., description="Gemini API 키")
-    CLAUDE_API_KEY: str = Field(..., description="클로드 API 키")
+    NAVER_CLOVA_API_KEY: str = Field(..., description="클로바 API 키")
     DATABASE_URL: str = Field(..., description="DB 연결 URL")
 
     SECRET_KEY: str = Field(..., description="JWT 시크릿 키")
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     EXPIRE_TIME: int = 60  # 분 단위
 
     GEMINI_MODEL: str = "gemini-2.0-flash"
-    CLAUDE_MODEL: str = "claude-3-5-sonnet-20241022"
+    NAVER_CLOVA_API_URL: str = Field(..., description="클로바 API url")
     REDIS_URL: str = Field(..., description="Redis 연결 URL")
 
     # OAuth 관련
@@ -32,8 +32,9 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_ENDPOINT: str = Field(..., description="OAuth 유저 엔드포인트")
     GOOGLE_TOKEN_ENDPOINT: str = Field(..., description="OAuth callback 핸들러 code to access_token")
 
-    # 관리자 UUID
-    ADMIN_UUID: str = Field(..., description="관리자 UUID")
+    # 관리자
+    ADMIN_USERNAME: str = Field(..., description="관리자 ID")
+    ADMIN_PASSWORD: str = Field(..., description="관리자 PW")
 
     model_config = SettingsConfigDict(
         env_file=".env",
