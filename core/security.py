@@ -10,7 +10,6 @@ from core.config import get_settings
 settings = get_settings()
 
 bearer_scheme = HTTPBearer()
-
 def create_access_token(subject: str,
                         expires_delta: Optional[timedelta] = None) -> str:
     now = datetime.utcnow()
@@ -41,3 +40,9 @@ def verify_token(
 ) -> str:
     token = credentials.credentials  # Bearer 다음의 토큰 문자열
     return decode_token(token)
+
+def verify_admin(user_id: str = Depends(verify_token)):
+    if user_id not in settings.ADMIN_UUID:
+        raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+    
+    return user_id

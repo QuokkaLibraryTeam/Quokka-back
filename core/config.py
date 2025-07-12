@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_ENDPOINT: str = Field(..., description="OAuth 유저 엔드포인트")
     GOOGLE_TOKEN_ENDPOINT: str = Field(..., description="OAuth callback 핸들러 code to access_token")
 
+    # 관리자 UUID
+    ADMIN_UUID: str = Field(..., description="관리자 UUID")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

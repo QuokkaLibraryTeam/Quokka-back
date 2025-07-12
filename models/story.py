@@ -50,3 +50,8 @@ class Story(Base):
         back_populates="story",
         cascade="all, delete-orphan",
     )
+
+    reports: Mapped[List["Report"]] = relationship(
+        back_populates="story", 
+        cascade="all, delete-orphan"
+    )

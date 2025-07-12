@@ -13,7 +13,6 @@ class Like(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     story_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stories.id"), nullable=False)
-    story: Mapped["Story"] = relationship("Story", back_populates="likes")
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

@@ -11,6 +11,8 @@ from fastapi.responses import FileResponse
 import os
 import models
 
+from admin.app import admin_app, create_admin
+
 from db.base import get_db
 from db.base import Base, engine
 app = FastAPI(
@@ -33,6 +35,11 @@ app.mount(
     "/illustrations",
     StaticFiles(directory="static/illustrations"),
     name="illustrations"
+)
+
+app.mount(
+    "/admin",
+    admin_app
 )
 
 @app.middleware("http")
@@ -69,3 +76,8 @@ app.include_router(v1_router, prefix="/api/v1")
 @app.get("/")
 def root():
     return {"message": "API is alive"}
+
+# 비동기 초기화 (어드민 페이지)
+@app.on_evnet("startup")
+async def on_startup():
+    await create_admin()

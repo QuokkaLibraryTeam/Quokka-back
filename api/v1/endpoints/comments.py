@@ -24,7 +24,7 @@ def post_comment(
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    # 댓글 생성
+    # 리뷰 생성
     comment = Comment(
         story_id=data.story_id,
         user_id=user_id,
@@ -36,7 +36,7 @@ def post_comment(
     db.commit()
     db.refresh(comment)
 
-    return {"message": "댓글이 성공적으로 등록되었습니다.", "comment_id": comment.id}
+    return {"message": "리뷰이 성공적으로 등록되었습니다.", "comment_id": comment.id}
 
 @router.get("/community/comment/{story_id}", response_model=List[CommentOut])
 def get_comments(story_id: UUID, db: Session = Depends(get_db)):
@@ -45,7 +45,7 @@ def get_comments(story_id: UUID, db: Session = Depends(get_db)):
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    # 댓글 목록 조회
+    # 리뷰 목록 조회
     comments = (
         db.query(Comment)
         .options(joinedload(Comment.user))
@@ -64,7 +64,7 @@ def get_comments(story_id: UUID, db: Session = Depends(get_db)):
         for comment in comments
     ]
 
-@router.update("/community/comment/{comment_id}")
+@router.put("/community/comment/{comment_id}")
 def update_comment(
     comment_id: int,
     data: CommentUpdate,
@@ -73,11 +73,11 @@ def update_comment(
 ):
     comment = db.query(Comment).filter_by(id=comment_id).first()
     if not comment:
-        raise HTTPException(status_code=404, details="댓글을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, details="리뷰를 찾을 수 없습니다.")
     
     # 본인 것만.
     if str(comment.user_id) != user_id:
-        raise HTTPException(status_code=403, details="본인의 댓글만 수정 가능합니다.")
+        raise HTTPException(status_code=403, details="본인의 리뷰만 수정 가능합니다.")
     
     comment.text = data.text
     comment.updated_at = datetime.utcnow()
@@ -86,7 +86,7 @@ def update_comment(
     db.refresh(comment)
 
     return {
-        "message": "댓글이 수정되었습니다.",
+        "message": "리뷰이 수정되었습니다.",
         "comment_id": comment.id
     }
 
@@ -98,7 +98,7 @@ def delete_comment(
 ):
     comment = db.query(Comment).filter_by(id=comment_id).first()
     if not comment:
-        raise HTTPException(status_code=404, detail="댓글을 찾을 수 없습니다.")
+        raise HTTPException(status_code=404, detail="리뷰를 찾을 수 없습니다.")
 
     if str(comment.user_id) != user_id:
         raise HTTPException(status_code=403, detail="삭제 권한이 없습니다")
@@ -107,6 +107,6 @@ def delete_comment(
     db.commit()
 
     return {
-        "message": "댓글이 삭제되었습니다.",
+        "message": "리뷰가 삭제되었습니다.",
         "comment_id": comment_id
     }
