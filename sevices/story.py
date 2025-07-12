@@ -34,7 +34,7 @@ def check_story_auth(db: Session, story_id: int, user_id: str):
     story = story_crud.get(db,story_id)
     if story is None:
         return False
-    return story.user_id == user_id
+    return str(story.user_id) == user_id
 
 def get_story_by_story_id(db: Session, story_id: int):
     story = story_crud.get(db,story_id)
