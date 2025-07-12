@@ -4,10 +4,9 @@ import db
 from core.redis import connect_ws, broadcast, disconnect_ws, rds, _users_key, close_room_by_code, get_room_details
 from sevices.user import get_user_by_id
 from sevices.websocket import authenticate
-router = APIRouter(prefix="/rooms", tags=["rooms"])
+router = APIRouter()
 
 
-# --- ✨ 수정된 웹소켓 엔드포인트 ---
 @router.websocket("/{room_code}")
 async def ws_endpoint(ws: WebSocket, room_code: str):
     # 실제로는 authenticate 함수가 user_id를 반환해야 합니다.
