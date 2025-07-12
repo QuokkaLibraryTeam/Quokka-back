@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     )
 
     GEMINI_API_KEY: str = Field(..., description="Gemini API 키")
+    CLAUDE_API_KEY: str = Field(..., description="클로드 API 키")
     DATABASE_URL: str = Field(..., description="DB 연결 URL")
 
     SECRET_KEY: str = Field(..., description="JWT 시크릿 키")
@@ -20,6 +21,7 @@ class Settings(BaseSettings):
     EXPIRE_TIME: int = 60  # 분 단위
 
     GEMINI_MODEL: str = "gemini-2.0-flash"
+    CLAUDE_MODEL: str = "claude-3-5-sonnet-20241022"
     REDIS_URL: str = Field(..., description="Redis 연결 URL")
 
     # OAuth 관련
