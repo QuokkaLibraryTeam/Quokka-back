@@ -3,12 +3,12 @@ from datetime import datetime
 from uuid import UUID
 
 class CommentCreate(BaseModel):
-    story_id: UUID
+    story_id: int
     text: str
 
 class CommentOut(BaseModel):
     id: int
-    story_id: UUID
+    story_id: int
     user_id: UUID
     text: str
     created_at: datetime

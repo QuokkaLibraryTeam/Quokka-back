@@ -19,7 +19,6 @@ from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
 from sevices.story import get_story_by_story_id
 
-
 # ────────────────────────────────────────────────
 # 0. 공통 고정 블록
 PROMPT_STATIC = """
