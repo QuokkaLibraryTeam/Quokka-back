@@ -49,7 +49,7 @@ async def login():
 
 @router.get("/callback")
 def callback(code: str, db: Session = Depends(get_db)):
-    # 1. code → access_token 교환
+    # [1] code to access_token 교환
     token_res = requests.post(settings.GOOGLE_TOKEN_ENDPOINT, data={
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
@@ -63,7 +63,7 @@ def callback(code: str, db: Session = Depends(get_db)):
 
     access_token = token_res.json().get("access_token")
 
-    # 2. access_token으로 사용자 정보 요청
+    # [2] access_token으로 사용자 정보 요청
     userinfo_res = requests.get(settings.GOOGLE_USERINFO_ENDPOINT, headers={
         "Authorization": f"Bearer {access_token}"
     })
@@ -73,7 +73,7 @@ def callback(code: str, db: Session = Depends(get_db)):
 
     userinfo = userinfo_res.json()
     google_id = userinfo["id"]
-    nickname = userinfo.get("name")  # ← 닉네임 (이름) 가져오기
+    nickname = userinfo.get("name")  # 구글 프로필 상의 닉네임을 그대로 가져옴
 
     # 3. DB에 사용자 저장 또는 조회
     user = db.query(User).filter_by(google_id=google_id).first()
@@ -94,6 +94,7 @@ def callback(code: str, db: Session = Depends(get_db)):
 
     return RedirectResponse(url=frontend_callback_url)
 
+# 토큰 유효성 검사 (현재 로그인한 사용자 정보 조회)
 @router.get("/me")
 async def me(
     user_id: str = Depends(verify_token),
