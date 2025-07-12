@@ -1,14 +1,16 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
+from sqlalchemy.orm import Session
 
 import db
 from core.redis import connect_ws, broadcast, disconnect_ws, rds, _users_key, close_room_by_code, get_room_details
+from db.base import get_db
 from sevices.user import get_user_by_id
 from sevices.websocket import authenticate
 router = APIRouter()
 
 
 @router.websocket("/{room_code}")
-async def ws_endpoint(ws: WebSocket, room_code: str):
+async def ws_endpoint(ws: WebSocket, room_code: str,db: Session = Depends(get_db)):
     # 실제로는 authenticate 함수가 user_id를 반환해야 합니다.
     # 예: user_id = await authenticate(ws)
     user_id = "anonymous_user"  # 임시 사용자 ID
@@ -20,7 +22,6 @@ async def ws_endpoint(ws: WebSocket, room_code: str):
         # 인증 실패 처리
         await ws.close(code=4001, reason=f"Authentication failed: {e}")
         return
-    db = ws.state.db
     user = get_user_by_id(db, user_id)
     # connect_ws가 방 존재 여부를 확인하므로, 여기서는 바로 호출
     await connect_ws(room_code, ws, user_id)
