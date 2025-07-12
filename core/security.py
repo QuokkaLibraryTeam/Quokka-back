@@ -11,7 +11,6 @@ settings = get_settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
-
 def create_access_token(subject: str,
                         expires_delta: Optional[timedelta] = None) -> str:
     now = datetime.utcnow()
@@ -41,3 +40,9 @@ def decode_token(token: str) -> str:
 
 def verify_token(token: str = Depends(oauth2_scheme)) -> str:
     return decode_token(token)
+
+def verify_admin(user_id: str = Depends(verify_token)):
+    if user_id not in settings.ADMIN_UUID:
+        raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
+    
+    return user_id

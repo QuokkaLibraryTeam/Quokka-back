@@ -21,4 +21,4 @@ class User(Base):
     comments: Mapped[List['Comment']] = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
     likes: Mapped[List['Like']] = relationship("Like", back_populates="user", cascade="all, delete-orphan")
     shares: Mapped[List['Share']] = relationship("Share", back_populates="user", cascade="all, delete-orphan")
-    reports: Mapped[List['Report']] = relationship("Report", back_populates="reporter", cascade="all, delete-orphan")
+    reports: Mapped[List["Report"]] = relationship("Report", back_populates="reporter", cascade="all, delete-orphan")

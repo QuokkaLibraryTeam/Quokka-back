@@ -18,5 +18,6 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    story: Mapped['Story'] = relationship("Story", back_populates="comments")
-    user: Mapped['User'] = relationship("User", back_populates="comments")
+    story: Mapped["Story"] = relationship("Story", back_populates="comments")
+    user: Mapped["User"] = relationship("User", back_populates="comments")
+    reports: Mapped[List["Report"]] = relationship("Report", back_populates="comment", cascade="all, delete-orphan")
