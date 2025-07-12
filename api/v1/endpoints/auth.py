@@ -80,6 +80,7 @@ def callback(code: str, db: Session = Depends(get_db)):
     if not user:
         user = User(
             google_id=google_id,
+            nickname=nickname,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )

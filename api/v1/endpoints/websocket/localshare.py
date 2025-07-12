@@ -1,7 +1,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 
-
+import db
 from core.redis import connect_ws, broadcast, disconnect_ws, rds, _users_key, close_room_by_code, get_room_details
+from sevices.user import get_user_by_id
 from sevices.websocket import authenticate
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -20,10 +21,11 @@ async def ws_endpoint(ws: WebSocket, room_code: str):
         # 인증 실패 처리
         await ws.close(code=4001, reason=f"Authentication failed: {e}")
         return
-
+    db = ws.state.db
+    user = get_user_by_id(db, user_id)
     # connect_ws가 방 존재 여부를 확인하므로, 여기서는 바로 호출
     await connect_ws(room_code, ws, user_id)
-    await broadcast(room_code, {"type": "notice", "text": f"{user_id}님이 방에 들어왔습니다."})
+    await broadcast(room_code, {"type": "notice", "text": f"{user.nickname}님이 방에 들어왔습니다."})
 
     try:
         while True:
@@ -37,7 +39,7 @@ async def ws_endpoint(ws: WebSocket, room_code: str):
     finally:
         # disconnect_ws 호출 시 user_id 전달
         await disconnect_ws(room_code, ws, user_id)
-        await broadcast(room_code, {"type": "notice", "text": f"{user_id}님이 방에 나갔습니다."})
+        await broadcast(room_code, {"type": "notice", "text": f"{user.nickname}님이 방에 나갔습니다."})
 
 
 @router.get("/{room_code}")
