@@ -12,15 +12,15 @@ from core.chat_manager import (
     rds,
     _meta
 )
-from core.cluade import refine_with_claude_sonnet35
+from core.cluade import send_clova_chat
 from core.image_manager import gen_two_images
 from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
 from sevices.story import get_story_by_story_id
 
-ILLUST_OK = "__ILLUST_OK__"
-SCENE_OK   = "__SCENE_OK__"
+ILLUST_OK = "ILLUST_OK"
+SCENE_OK   = "SCENE_OK"
 
 
 class State(Enum):
@@ -130,7 +130,7 @@ class StorybookService:
                 )
                 await append_history(self.session_key, "AI", prompt2)
                 txt = await send_message(self.session_key, prompt2)
-                refined_txt = refine_with_claude_sonnet35(txt)
+                refined_txt = send_clova_chat(txt)
                 await append_history(self.session_key, "AI", txt)
                 self.synopsis = refined_txt
                 self.state = State.ILLUST_WAIT
