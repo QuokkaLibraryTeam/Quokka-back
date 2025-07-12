@@ -41,7 +41,7 @@ async def ws_endpoint(ws: WebSocket, room_code: str):
         await broadcast(room_code, {"type": "notice", "text": f"{user.nickname}님이 방에 나갔습니다."})
 
 
-@router.get("/{room_code}")
+@router.get("/rooms/{room_code}")
 async def get_room_info(room_code: str):
     room_details = await get_room_details(room_code)
     if room_details is None:
@@ -49,7 +49,7 @@ async def get_room_info(room_code: str):
     return room_details
 
 
-@router.delete("/{room_code}")
+@router.delete("/rooms/{room_code}")
 async def close_room(room_code: str):
     success = await close_room_by_code(room_code)
     if not success:
