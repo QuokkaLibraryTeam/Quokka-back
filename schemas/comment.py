@@ -9,7 +9,7 @@ class CommentCreate(BaseModel):
 class CommentOut(BaseModel):
     id: int
     story_id: int
-    user_id: UUID
+    user_nickname: str       
     text: str
     created_at: datetime
     updated_at: datetime

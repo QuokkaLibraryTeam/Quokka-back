@@ -39,26 +39,26 @@ def post_comment(
 
 @router.get("/community/comment/{story_id}", response_model=List[CommentOut])
 def get_comments(story_id: int, db: Session = Depends(get_db)):
-    # 스토리 존재 여부 확인
     story = db.query(Story).filter_by(id=story_id).first()
     if not story:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    # 리뷰 목록 조회
     comments = (
         db.query(Comment)
-        .options(joinedload(Comment.user))
-        .filter_by(story_id=story_id)
-        .order_by(Comment.updated_at.asc()) # 수정 시간 오름차순
-        .all()
+          .options(joinedload(Comment.user))
+          .filter_by(story_id=story_id)
+          .order_by(Comment.updated_at.asc())
+          .all()
     )
 
     return [
         CommentOut(
             id=comment.id,
-            user_id=comment.user.nickname,
+            story_id=comment.story_id,
+            user_nickname=comment.user.nickname,  # 닉네임이 뜨도록
             text=comment.text,
-            created_at=comment.updated_at
+            created_at=comment.created_at,
+            updated_at=comment.updated_at
         )
         for comment in comments
     ]
