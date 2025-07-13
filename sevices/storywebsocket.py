@@ -269,7 +269,7 @@ class StorybookService:
             await mark_done(self.session_key)
             self.state = State.FINISHED
         elif cmd.get("type") == "retry":
-            self.state = State.SCENE_SYNOPSIS
+            self.state = State.ILLUST_INFO
         else:
             raise WebSocketException(code=1003)
 
