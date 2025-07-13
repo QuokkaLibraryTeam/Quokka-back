@@ -14,7 +14,7 @@ from schemas.story import StoryOutWithDetail
 router = APIRouter()
 
 # 미리 지정된 태그 목록
-PREDEFINED_TAGS = ["Adventure", "Fantasy", "Mystery", "Sci-Fi", "Horror"]
+PREDEFINED_TAGS = ["어드벤쳐", "판타지", "미스터리", "과학", "호러"]
 
 @router.get(
     "/share/tags",
