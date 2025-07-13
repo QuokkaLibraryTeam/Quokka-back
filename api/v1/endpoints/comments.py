@@ -85,7 +85,7 @@ def update_comment(
     db.refresh(comment)
 
     return {
-        "message": "리뷰이 수정되었습니다.",
+        "message": "리뷰가 수정되었습니다.",
         "comment_id": comment.id
     }
 
