@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, DateTime, ForeignKey, Column, Boolean
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from db.base import Base
 
@@ -55,3 +56,7 @@ class Story(Base):
         back_populates="story", 
         cascade="all, delete-orphan"
     )
+
+    @hybrid_property
+    def user_nickname(self) -> str:
+        return self.user.nickname if self.user else ""

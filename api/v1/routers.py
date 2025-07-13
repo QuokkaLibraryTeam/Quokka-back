@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.v1.endpoints import websockets, users, stories, auth, rooms, comments, likes, reports
+from api.v1.endpoints import shares, websockets, users, stories, auth, rooms, comments, likes, reports, shares
 
 router = APIRouter()
 
@@ -15,3 +15,4 @@ router.include_router(rooms.router,prefix="/rooms",tags=["rooms"])
 router.include_router(comments.router, prefix="/comments", tags=["comments"])
 router.include_router(likes.router, prefix="/likes", tags=["likes"])
 router.include_router(reports.router, prefix="/reports", tags=["reports"])
+router.include_router(shares.router, prefix="/shares", tags=["shares"])
