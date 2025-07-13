@@ -15,23 +15,10 @@ def report_content(
     reporter_id: str = Depends(verify_token),
     db: Session = Depends(get_db)
 ):
-    if not data.story_id and not data.comment_id:
-        raise HTTPException(status_code=400, detail="Either story_id or comment_id must be provided")
-
-    if data.story_id:
-        story = db.query(Story).filter_by(id=data.story_id).first()
-        if not story:
-            raise HTTPException(status_code=404, detail="동화를 찾을 수 없습니다.")
-
-    if data.comment_id:
-        comment = db.query(Comment).filter_by(id=data.comment_id).first()
-        if not comment:
-            raise HTTPException(status_code=404, detail="리뷰를 찾을 수 없습니다.")
-
     report = Report(
         reporter_id=reporter_id,
-        story_id=data.story_id,
-        comment_id=data.comment_id,
+        story_id=data.story_id,     # None 이거나 유효한 >0 정수
+        comment_id=data.comment_id, # None 이거나 유효한 >0 정수
         reason=data.reason,
         created_at=datetime.utcnow()
     )
