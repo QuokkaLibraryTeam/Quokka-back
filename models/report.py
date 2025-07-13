@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy import Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 from db.base import Base
 
 class Report(Base):
@@ -21,3 +22,11 @@ class Report(Base):
     reporter: Mapped["User"] = relationship("User", back_populates="reports")
     story: Mapped[Optional["Story"]] = relationship("Story", back_populates="reports")
     comment: Mapped[Optional["Comment"]] = relationship("Comment", back_populates="reports")
+
+    @hybrid_property
+    def target_type(self) -> str:
+        if self.story_id is not None:
+            return "Story"
+        if self.comment_id is not None:
+            return "Comment"
+        return "Unknown"
