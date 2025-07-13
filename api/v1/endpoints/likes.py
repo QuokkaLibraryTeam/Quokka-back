@@ -55,7 +55,12 @@ def unlike_story(
 @router.get("/community/like/{story_id}")
 def count_likes(story_id: int, db: Session = Depends(get_db)):
     count = db.query(Like).filter_by(story_id=story_id).count()
+
     return {
         "story_id": story_id, 
         "likes": count
     }
+
+@router.get("/community/like/me/{story_id}")
+def get_like(story_id: int, db: Session = Depends(get_db),user_id: str = Depends(verify_token)):
+    return {"liked" : db.query(Like).filter_by(story_id=story_id,user_id=user_id).count() > 0}
