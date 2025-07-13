@@ -16,6 +16,13 @@ async def init_chat(request: Request, story_id: int, user_id: str = Depends(veri
     session_key = await new_session(user_id, story_id)
     return {"session_key": session_key}
 
+@router.get("/originals", response_model=StoriesOut)
+def get_originals(request: Request):
+    db = request.state.db
+    stories = get_all_story(db)
+    resp = [story for story in stories if story.original]
+    return {"stories": resp}
+
 @router.get("/", response_model=StoriesOut)
 def list_stories(request: Request):
     db = request.state.db
