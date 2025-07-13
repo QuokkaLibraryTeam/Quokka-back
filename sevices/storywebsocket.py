@@ -35,11 +35,6 @@ PROMPT_STATIC = """
 - ‘QUESTION:’ 뒤에 질문 한 줄.
 - 바로 이어서 ‘EXAMPLES:’ 아래 보기 예시 4줄(‘- ’로 시작).
 - 예시는 짧게.
-
-[확실성 표기]
-- 모르면 “모르겠습니다”.
-- 추측이면 “추측입니다”라고 밝히고 이유 한 줄.
-- 출처가 불분명하면 “확실하지 않음”.
 """
 # ────────────────────────────────────────────────
 
@@ -85,10 +80,9 @@ EXAMPLES:
     )
 
 
-# 3. 7줄 동화 생성 지시
-STORY_7_LINES_PROMPT = """
+STORY_5_LINES_PROMPT = """
 [지시]
-지금까지 만든 시놉시스를 바탕으로 동화 본문을 7줄만 써 줘.
+지금까지 만든 시놉시스를 바탕으로 동화 본문을 5줄만 써 줘.
 - 숫자·머리표·특수기호 없이 한 줄에 한 문장만.
 - 문장은 초등학생이 읽기 쉽게.
 - 이모티콘 금지.
@@ -218,8 +212,8 @@ class StorybookService:
 
         while True:
             if SCENE_OK in txt:
-                await append_history(self.session_key, "AI", STORY_7_LINES_PROMPT)
-                txt = await send_message(self.session_key, STORY_7_LINES_PROMPT)
+                await append_history(self.session_key, "AI", STORY_5_LINES_PROMPT)
+                txt = await send_message(self.session_key, STORY_5_LINES_PROMPT)
                 refined_txt = send_clova_chat(txt)
                 await append_history(self.session_key, "AI", txt)
                 self.synopsis = refined_txt
