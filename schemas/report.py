@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, root_validator, conint
+from pydantic import BaseModel, ConfigDict, model_validator, conint
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -8,7 +8,7 @@ class ReportCreate(BaseModel):
     comment_id: Optional[conint(gt=0)] = None
     reason: str
 
-    @root_validator
+    @model_validator(mode="after")
     def check_one_target(cls, values):
         sid, cid = values.get("story_id"), values.get("comment_id")
         if (sid is None and cid is None) or (sid is not None and cid is not None):
