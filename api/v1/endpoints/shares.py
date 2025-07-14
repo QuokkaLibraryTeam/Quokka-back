@@ -38,9 +38,23 @@ def get_database_tags(
     """
     DB에 저장된 모든 태그 조회 (중복 없이)
     """
-    # PostgreSQL array unnest을 이용해 tags 배열에서 모든 태그를 추출하고 중복 제거
     rows = db.query(func.unnest(Share.tags).label("tag")).distinct().all()
     return [row.tag for row in rows]
+
+@router.get(
+    "/share/stories/{story_id}/status",
+    response_model=dict,
+    status_code=status.HTTP_200_OK
+)
+def check_story_shared(
+    story_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    특정 스토리가 현재 공유(퍼블리싱) 중인지 여부 반환
+    """
+    shared = db.query(Share).filter_by(story_id=story_id).first() is not None
+    return {"shared": shared}
 
 @router.post(
     "/share/stories/{story_id}",
@@ -60,7 +74,6 @@ def publish_story(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Story not found or access denied"
         )
-
     # 태그 유효성 검증
     tags: List[str] = []
     for tag in data.tags:
@@ -73,7 +86,6 @@ def publish_story(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one valid tag must be provided"
         )
-
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
     if share:
         share.tags = tags
@@ -85,7 +97,6 @@ def publish_story(
             created_at=datetime.utcnow()
         )
         db.add(share)
-
     db.commit()
     db.refresh(share)
     return share
@@ -107,7 +118,6 @@ def update_share_tags(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Shared story not found or access denied"
         )
-
     tags: List[str] = []
     for tag in data.tags:
         t = tag.strip()
@@ -119,7 +129,6 @@ def update_share_tags(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one valid tag must be provided"
         )
-
     share.tags = tags
     db.commit()
     db.refresh(share)
@@ -140,7 +149,6 @@ def unpublish_story(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Shared story not found or access denied"
         )
-
     db.delete(share)
     db.commit()
     return

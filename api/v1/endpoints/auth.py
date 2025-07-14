@@ -25,8 +25,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# @@ 현재 엔트포인트 :: localhost:8000/api/v1/auth/token
-
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends()
