@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Optional
@@ -9,7 +9,6 @@ from db.base import get_db
 from models.story import Story
 from models.share import Share
 from schemas.share import ShareCreate, ShareOut, TagsUpdate
-from schemas.story import StoryOutWithDetail
 
 router = APIRouter()
 
@@ -19,7 +18,7 @@ PREDEFINED_TAGS = ["어드벤쳐", "판타지", "미스터리", "과학", "호�
 @router.get(
     "/share/tags",
     response_model=List[str],
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def get_predefined_tags():
     """
@@ -30,7 +29,7 @@ def get_predefined_tags():
 @router.get(
     "/share/db-tags",
     response_model=List[str],
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def get_database_tags(
     db: Session = Depends(get_db)
@@ -42,24 +41,9 @@ def get_database_tags(
     return [row.tag for row in rows]
 
 @router.get(
-    "/share/stories/{story_id}/status",
-    response_model=dict,
-    status_code=status.HTTP_200_OK
-)
-def check_story_shared(
-    story_id: int,
-    db: Session = Depends(get_db)
-):
-    """
-    특정 스토리가 현재 공유(퍼블리싱) 중인지 여부 반환
-    """
-    shared = db.query(Share).filter_by(story_id=story_id).first() is not None
-    return {"shared": shared}
-
-@router.get(
     "/share/stories/check/{story_id}",
     response_model=dict,
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def check_shared_story(
     story_id: int,
@@ -74,7 +58,7 @@ def check_shared_story(
 @router.post(
     "/share/stories/{story_id}",
     response_model=ShareOut,
-    status_code=status.HTTP_201_CREATED
+    status_code=201
 )
 def publish_story(
     story_id: int,
@@ -86,14 +70,14 @@ def publish_story(
     story = db.query(Story).filter_by(id=story_id, user_id=user_id).first()
     if not story:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Story not found or access denied"
         )
     # 태그 유효성 검증
     tags: List[str] = [t.strip() for t in data.tags if t.strip()]
     if not tags:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="At least one valid tag must be provided"
         )
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
@@ -114,7 +98,7 @@ def publish_story(
 @router.patch(
     "/share/stories/{story_id}",
     response_model=ShareOut,
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def update_share_tags(
     story_id: int,
@@ -125,13 +109,13 @@ def update_share_tags(
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
     if not share:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Shared story not found or access denied"
         )
     tags: List[str] = [t.strip() for t in data.tags if t.strip()]
     if not tags:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="At least one valid tag must be provided"
         )
     share.tags = tags
@@ -142,7 +126,7 @@ def update_share_tags(
 @router.post(
     "/share/stories/{story_id}/tags",
     response_model=ShareOut,
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def add_tags_to_share(
     story_id: int,
@@ -153,7 +137,7 @@ def add_tags_to_share(
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
     if not share:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Shared story not found or access denied"
         )
     # 중복 없이 추가
@@ -166,7 +150,7 @@ def add_tags_to_share(
 @router.delete(
     "/share/stories/{story_id}/tags",
     response_model=ShareOut,
-    status_code=status.HTTP_200_OK
+    status_code=200
 )
 def remove_tags_from_share(
     story_id: int,
@@ -177,7 +161,7 @@ def remove_tags_from_share(
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
     if not share:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Shared story not found or access denied"
         )
     remove = {t.strip() for t in data.tags if t.strip()}
@@ -188,7 +172,7 @@ def remove_tags_from_share(
 
 @router.delete(
     "/share/stories/{story_id}",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=204
 )
 def unpublish_story(
     story_id: int,
@@ -198,7 +182,7 @@ def unpublish_story(
     share = db.query(Share).filter_by(story_id=story_id, user_id=user_id).first()
     if not share:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Shared story not found or access denied"
         )
     db.delete(share)
@@ -234,7 +218,7 @@ def get_shared_story(
     ).filter_by(story_id=story_id).first()
     if not share:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="Shared story not found"
         )
     return share
