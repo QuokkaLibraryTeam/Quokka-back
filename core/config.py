@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: str = Field(..., description="Gemini API 키")
     NAVER_CLOVA_API_KEY: str = Field(..., description="클로바 API 키")
+    OPENAI_API_KEY: str = Field(..., description="Dall e API 키")
     DATABASE_URL: str = Field(..., description="DB 연결 URL")
 
     SECRET_KEY: str = Field(..., description="JWT 시크릿 키")
