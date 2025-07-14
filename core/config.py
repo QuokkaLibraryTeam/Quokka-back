@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     # 관리자
     ADMIN_USERNAME: str = Field(..., description="관리자 ID")
     ADMIN_PASSWORD: str = Field(..., description="관리자 PW")
+    
+    USING_DALL : bool = Field(..., description="dall 사용 여부")
 
     model_config = SettingsConfigDict(
         env_file=".env",

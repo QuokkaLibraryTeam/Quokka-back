@@ -75,7 +75,7 @@ async def _download_and_save(session: aiohttp.ClientSession, url: str) -> str:
     except Exception:
         return ""
 
-async def gen_two_images(
+async def gen_two_images_with_dall(
     prompt: str,
     retry: int = 0,
     max_retries: int = 3
@@ -111,6 +111,6 @@ async def gen_two_images(
     # 생성된 이미지가 2장 미만이면 프롬프트 교정 후 재귀 호출
     if len([u for u in urls if u]) < 2 and retry < max_retries:
         fixed = await _fix_prompt_with_llm(prompt)
-        return await gen_two_images(fixed, retry + 1, max_retries)
+        return await gen_two_images_with_dall(fixed, retry + 1, max_retries)
 
     return urls
