@@ -57,7 +57,7 @@ def check_story_shared(
     return {"shared": shared}
 
 @router.get(
-    "/share/stories/{story_id}",
+    "/share/stories/check/{story_id}",
     response_model=dict,
     status_code=status.HTTP_200_OK
 )
