@@ -56,6 +56,21 @@ def check_story_shared(
     shared = db.query(Share).filter_by(story_id=story_id).first() is not None
     return {"shared": shared}
 
+@router.get(
+    "/share/stories/{story_id}",
+    response_model=dict,
+    status_code=status.HTTP_200_OK
+)
+def check_shared_story(
+    story_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    특정 스토리가 공유(퍼블리싱) 중인지 확인
+    """
+    shared = db.query(Share).filter_by(story_id=story_id).first() is not None
+    return {"shared": shared}
+
 @router.post(
     "/share/stories/{story_id}",
     response_model=ShareOut,
@@ -127,7 +142,7 @@ def update_share_tags(
 @router.post(
     "/share/stories/{story_id}/tags",
     response_model=ShareOut,
-    status_code=200
+    status_code=status.HTTP_200_OK
 )
 def add_tags_to_share(
     story_id: int,
@@ -163,7 +178,7 @@ def remove_tags_from_share(
     if not share:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="공유된 동화를 찾을 수 없거나 권한이 없습니다."
+            detail="Shared story not found or access denied"
         )
     remove = {t.strip() for t in data.tags if t.strip()}
     share.tags = [t for t in share.tags if t not in remove]
@@ -184,7 +199,7 @@ def unpublish_story(
     if not share:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="공유된 동화를 찾을 수 없거나 권한이 없습니다."
+            detail="Shared story not found or access denied"
         )
     db.delete(share)
     db.commit()
