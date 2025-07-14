@@ -21,6 +21,11 @@ from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
 from sevices.story import get_story_by_story_id
 
+
+ILLUST_OK = "ILLUST_OK"
+SCENE_OK  = "SCENE_OK"
+WARNING = "WARNING"
+
 # ────────────────────────────────────────────────
 # 0. 공통 고정 블록
 PROMPT_STATIC = """
@@ -37,6 +42,8 @@ PROMPT_STATIC = """
 - ‘QUESTION:’ 뒤에 질문 한 줄.
 - 바로 이어서 ‘EXAMPLES:’ 아래 보기 예시 4줄(‘- ’로 시작).
 - 예시는 짧게.
+[필터링]
+- 사용자의 응답이 부적절한 응답이라면 WARNING을 포함하여 대답해
 """
 # ────────────────────────────────────────────────
 
@@ -125,10 +132,6 @@ def build_quiz_feedback_prompt(user_answer: str) -> str:
     )
 
 
-ILLUST_OK = "ILLUST_OK"
-SCENE_OK  = "SCENE_OK"
-
-
 class State(Enum):
     ILLUST_INFO    = auto()
     SCENE_SYNOPSIS = auto()
@@ -187,6 +190,9 @@ class StorybookService:
         await append_history(self.session_key, "AI", txt)
 
         while True:
+            if WARNING in txt:
+                await ws.send_json({"type": "rejected", "text": "", "examples": []})
+                return
             if ILLUST_OK in txt:
                 illust_prompt = txt.replace(ILLUST_OK, "").strip()
                 if illust_prompt:
@@ -216,6 +222,10 @@ class StorybookService:
         await append_history(self.session_key, "AI", txt)
 
         while True:
+            if WARNING in txt:
+                await ws.send_json({"type": "rejected", "text": "", "examples": []})
+                return
+
             if SCENE_OK in txt:
                 await append_history(self.session_key, "AI", STORY_5_LINES_PROMPT)
                 txt = await send_message(self.session_key, STORY_5_LINES_PROMPT)
