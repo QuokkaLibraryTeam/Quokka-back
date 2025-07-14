@@ -6,7 +6,7 @@ from typing import List
 from google import genai
 from google.genai import types
 
-from core.chat_manager import send_message
+from core.chat_manager import send_message, translate_to_english
 from core.config import get_settings
 
 MEDIA_DIR = pathlib.Path("static/illustrations")
@@ -55,12 +55,13 @@ async def gen_two_images(
 
     re_prompt = f"\n[그려줘]\n{prompt}"
     image_prompt = IMAGE_PROMPT_PREFIX + re_prompt
-
+    translated_prompt = await translate_to_english(image_prompt)
+    print("번역된 프롬프트:", translated_prompt)
     config = types.GenerateContentConfig(response_modalities=["Text", "Image"])
     tasks = [
         client.aio.models.generate_content(
             model="gemini-2.0-flash-preview-image-generation",
-            contents=image_prompt,
+            contents=translated_prompt,
             config=config
         ) for _ in range(2)
     ]

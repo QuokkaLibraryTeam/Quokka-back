@@ -34,6 +34,23 @@ model = GenerativeModel(
 
 active_chat_sessions: Dict[str, ChatSession] = {}
 
+async def translate_to_english(text: str) -> str:
+    """
+    주어진 한글 문장을 영어로 번역하여 반환하는 함수
+    """
+    # 번역 전용 채팅 세션 시작
+    translation_chat = model.start_chat(
+        system_instruction="""
+[역할]
+- 당신은 전문 번역가야.
+- 사용자가 입력한 한국어 문장을 정확한 영어로 번역해 줘.
+- 번역 외 다른 설명은 절대 하지 마.
+""".strip()
+    )
+    # 번역 요청 보내기
+    response = await translation_chat.send_message_async(f"한국어 문장을 영어로 번역해줘: {text}")
+    return response.text
+
 
 async def new_session(user_id: str, story_id: Optional[int]) -> str:
     key = f"{user_id}:{story_id or 'tmp'}:{uuid.uuid4().hex[:8]}"

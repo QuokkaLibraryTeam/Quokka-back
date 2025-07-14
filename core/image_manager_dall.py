@@ -7,7 +7,7 @@ from typing import List
 import aiohttp
 import openai
 
-from core.chat_manager import send_message
+from core.chat_manager import send_message, translate_to_english
 from core.config import get_settings
 
 # 저장 경로 및 URL 접두사 설정
@@ -90,12 +90,13 @@ async def gen_two_images_with_dall(
     # 원본 프롬프트에 그려달라는 지시 추가
     re_prompt = f"\n[그려줘]\n{prompt}"
     image_prompt = IMAGE_PROMPT_PREFIX + re_prompt
-
+    translated_prompt = await translate_to_english(image_prompt)
+    print("번역된 프롬프트:", translated_prompt)
     urls: List[str] = []
     try:
         # 이미지 2장 생성 요청
         response = await openai.Image.acreate(
-            prompt=image_prompt,
+            prompt=translated_prompt,
             n=2,
             size="1024x1024"  # DALL·E가 지원하는 사이즈 중 하나
         )
