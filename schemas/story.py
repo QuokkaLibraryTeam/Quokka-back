@@ -51,6 +51,10 @@ class StoriesOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class StoriesOutWithDetail(BaseModel):
+    stories: List[StoryOutWithDetail]
+    model_config = ConfigDict(from_attributes=True)
+
 class ClientStart(TypedDict):
     type: str
     text: str
