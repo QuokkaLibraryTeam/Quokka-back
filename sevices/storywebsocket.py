@@ -13,7 +13,9 @@ from core.chat_manager import (
     _meta
 )
 from core.cluade import send_clova_chat
+from core.config import get_settings
 from core.image_manager import gen_two_images
+from core.image_manager_dall import gen_two_images_with_dall
 from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from sevices.scene import create_scene
@@ -137,7 +139,7 @@ class State(Enum):
     QUIZ           = auto()
     EXTEND         = auto()
 
-
+settings = get_settings()
 class StorybookService:
     def __init__(self, session_key: str):
         self.available_cmd = ["quiz", "scene"]
@@ -188,7 +190,10 @@ class StorybookService:
             if ILLUST_OK in txt:
                 illust_prompt = txt.replace(ILLUST_OK, "").strip()
                 if illust_prompt:
-                    self.img_task = asyncio.create_task(gen_two_images(illust_prompt))
+                    if not settings.USING_DALL:
+                        self.img_task = asyncio.create_task(gen_two_images(illust_prompt))
+                    else:
+                        self.img_task = asyncio.create_task(gen_two_images_with_dall(illust_prompt))
                     self.state = State.SCENE_SYNOPSIS
                 else:
                     self.state = State.ILLUST_INFO
