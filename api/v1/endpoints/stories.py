@@ -3,7 +3,7 @@ from starlette import status
 
 from core.chat_manager import new_session
 from core.security import verify_token, decode_token
-from schemas.story import StoryOut, StoriesOut, StoryOutWithDetail
+from schemas.story import StoryOut, StoriesOut, StoryOutWithDetail, StoriesOutWithDetail
 from sevices.story import create_new_story, get_all_story, check_story_auth, get_story_by_story_id
 
 router = APIRouter()
@@ -16,7 +16,7 @@ async def init_chat(request: Request, story_id: int, user_id: str = Depends(veri
     session_key = await new_session(user_id, story_id)
     return {"session_key": session_key}
 
-@router.get("/originals", response_model=StoriesOut)
+@router.get("/originals", response_model=StoriesOutWithDetail)
 def get_originals(request: Request):
     db = request.state.db
     stories = get_all_story(db)
