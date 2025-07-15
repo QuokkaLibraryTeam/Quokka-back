@@ -27,4 +27,4 @@ class Scene(Base):
         nullable=False
     )
 
-    story: Mapped["Story"] = relationship(back_populates="scenes")
+    stories: Mapped["Story"] = relationship(back_populates="scenes")

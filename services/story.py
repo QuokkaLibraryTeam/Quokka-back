@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from crud.story import story_crud
 from models.story import Story
-from schemas.story import StoryCreate
+from schemas.story import StoryCreate, StoryFilter
 
 
 def create_new_story(
@@ -24,6 +24,10 @@ def create_new_story(
 
 def get_all_story(db: Session):
     stories = story_crud.get_all(db)
+    return stories
+
+def get_all_story_by_filter(db: Session, filters: StoryFilter):
+    stories = story_crud.get_multi_filtered(db, filter=filters)
     return stories
 
 def get_all_stories_by_user_id(db: Session,user_id : str):

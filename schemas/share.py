@@ -6,12 +6,10 @@ from schemas.story import StoryOutWithDetail
 
 class ShareCreate(BaseModel):
     tags: List[str]
-
     model_config = ConfigDict(from_attributes=True)
 
 class TagsUpdate(BaseModel):
     tags: List[str]
-
     model_config = ConfigDict(from_attributes=True)
 
 class ShareOut(BaseModel):

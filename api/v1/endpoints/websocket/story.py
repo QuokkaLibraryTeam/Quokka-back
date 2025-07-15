@@ -4,8 +4,8 @@ from fastapi.exceptions import WebSocketException
 from sqlalchemy.orm import Session
 
 from db.base import get_db
-from sevices.storywebsocket import StorybookService
-from sevices.websocket import authenticate
+from services.storywebsocket import StorybookService
+from services.websocket import authenticate
 
 router = APIRouter()
 

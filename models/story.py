@@ -32,28 +32,28 @@ class Story(Base):
     )
 
     scenes: Mapped[List["Scene"]] = relationship(
-        back_populates="story",
+        back_populates="stories",
         order_by="(Scene.order_idx, Scene.id)",
         cascade="all, delete-orphan",
     )
 
     comments: Mapped[List["Comment"]] = relationship(
-        back_populates="story",
+        back_populates="stories",
         cascade="all, delete-orphan",
     )
 
     likes: Mapped[List["Like"]] = relationship(
-        back_populates="story",
+        back_populates="stories",
         cascade="all, delete-orphan",
     )
 
     shares: Mapped[List["Share"]] = relationship(
-        back_populates="story",
+        back_populates="stories",
         cascade="all, delete-orphan",
     )
 
     reports: Mapped[List["Report"]] = relationship(
-        back_populates="story", 
+        back_populates="stories",
         cascade="all, delete-orphan"
     )
 

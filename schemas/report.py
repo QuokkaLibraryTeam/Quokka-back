@@ -1,30 +1,30 @@
-from pydantic import BaseModel, ConfigDict, model_validator, conint
-from typing import Optional
-from uuid import UUID
+
+import uuid
 from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field, model_validator, ConfigDict
+
 
 class ReportCreate(BaseModel):
-    # 1 이상의 정수만 허용, 기본값 None
-    story_id: Optional[conint(gt=0)]   = None
-    comment_id: Optional[conint(gt=0)] = None
-    reason: str
+    story_id: Optional[int] = None
+    comment_id: Optional[int] = None
+    reason: str = Field(..., min_length=1, max_length=300)
 
     @model_validator(mode="after")
-    def check_one_target(self):
-        # 둘 다 None 이거나 둘 다 값이 있을 수 없도록
-        if (self.story_id is None) == (self.comment_id is None):
-            raise ValueError("story_id 또는 comment_id 중 하나만 제공해야 합니다.")
-        return self
+    def _check_target(cls, values):
+        if not values.get("story_id") and not values.get("comment_id"):
+            raise ValueError("story_id 또는 comment_id 중 하나는 반드시 필요합니다.")
+        return values
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class ReportOut(BaseModel):
     id: int
-    reporter_id: UUID
+    reporter_id: uuid.UUID
     story_id: Optional[int]
     comment_id: Optional[int]
     reason: str
     created_at: datetime
 
-    class Config:
-        model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)

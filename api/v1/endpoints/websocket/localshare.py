@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 import db
 from core.redis import connect_ws, broadcast, disconnect_ws, rds, _users_key, close_room_by_code, get_room_details
 from db.base import get_db
-from sevices.user import get_user_by_id
-from sevices.websocket import authenticate
+from services.user import get_user_by_id
+from services.websocket import authenticate
 router = APIRouter()
 
 
@@ -40,19 +40,3 @@ async def ws_endpoint(ws: WebSocket, room_code: str,db: Session = Depends(get_db
         # disconnect_ws 호출 시 user_id 전달
         await disconnect_ws(room_code, ws, user_id)
         await broadcast(room_code, {"type": "notice", "text": f"{user.nickname}님이 방에 나갔습니다."})
-
-
-@router.get("/rooms/{room_code}")
-async def get_room_info(room_code: str):
-    room_details = await get_room_details(room_code)
-    if room_details is None:
-        raise HTTPException(status_code=404, detail="Room not found")
-    return room_details
-
-
-@router.delete("/rooms/{room_code}")
-async def close_room(room_code: str):
-    success = await close_room_by_code(room_code)
-    if not success:
-        raise HTTPException(status_code=404, detail="Room not found")
-    return {"status": "success", "message": f"Room {room_code} has been scheduled for closing."}

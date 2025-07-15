@@ -17,5 +17,5 @@ class Share(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
 
-    story: Mapped['Story'] = relationship("Story", back_populates="shares")
+    stories: Mapped['Story'] = relationship("Story", back_populates="shares")
     user: Mapped['User'] = relationship("User", back_populates="shares")

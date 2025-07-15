@@ -2,14 +2,15 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from core.config import get_settings
 
 settings = get_settings()
 
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
+
 def create_access_token(subject: str,
                         expires_delta: Optional[timedelta] = None) -> str:
     now = datetime.utcnow()
@@ -46,3 +47,14 @@ def verify_admin(user_id: str = Depends(verify_token)):
         raise HTTPException(status_code=403, detail="관리자 권한이 필요합니다.")
     
     return user_id
+
+def optional_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
+) -> Optional[str]:
+    if credentials is None:
+        return None
+    try:
+        token = credentials.credentials
+        return decode_token(token)
+    except Exception:
+        return None

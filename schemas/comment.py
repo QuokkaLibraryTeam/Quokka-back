@@ -1,21 +1,27 @@
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from uuid import UUID
+from pydantic import BaseModel, Field, ConfigDict
 
-class CommentCreate(BaseModel):
+
+# ── 공통 ──────────────────────────────────────────────
+class _CommentBase(BaseModel):
+    text: str = Field(..., min_length=1, max_length=500)
+
+
+# ── 입력용 ────────────────────────────────────────────
+class CommentCreate(_CommentBase):
     story_id: int
-    text: str
 
-class CommentOut(BaseModel):
+
+class CommentUpdate(BaseModel):
+    text: str = Field(..., min_length=1, max_length=500)
+
+
+# ── 출력용 ────────────────────────────────────────────
+class CommentOut(_CommentBase):
     id: int
     story_id: int
-    user_nickname: str       
-    text: str
+    user_nickname: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        model_config = ConfigDict(from_attributes=True)
-
-class CommentUpdate(BaseModel):
-    text: str
+    model_config = ConfigDict(from_attributes=True)

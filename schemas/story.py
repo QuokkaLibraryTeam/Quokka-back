@@ -72,3 +72,8 @@ class ClientChoice(TypedDict):
 
 class ClientCmd(TypedDict):
     type: str
+
+class StoryFilter(BaseModel):
+    original: Optional[bool] = Field(
+        False,description="기존 전래동화 여부"
+    )

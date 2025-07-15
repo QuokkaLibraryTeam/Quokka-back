@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
-from sqlalchemy import String, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from db.base import Base
+
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -18,6 +20,6 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    story: Mapped["Story"] = relationship("Story", back_populates="comments")
+    stories: Mapped["Story"] = relationship("Story", back_populates="comments")
     user: Mapped["User"] = relationship("User", back_populates="comments")
     reports: Mapped[List["Report"]] = relationship("Report", back_populates="comment", cascade="all, delete-orphan")
