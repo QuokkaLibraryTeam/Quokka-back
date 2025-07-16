@@ -5,13 +5,15 @@ from sqlalchemy.orm import Session
 
 from crud.comment import comment_crud
 from crud.story import story_crud
-from schemas.comment import CommentCreate, CommentUpdate, CommentOut
+from schemas.comment import CommentCreate, CommentUpdate, CommentOut, CommentCreateModel, CommentFilter
 
 
 # ── C ────────────────────────────────────────────────────────────────
-def create_comment(db: Session, *, data: CommentCreate, user_id: str) -> CommentOut:
-    if not story_crud.get(db, id=data.story_id):
+def create_comment(db: Session,story_id: int, model: CommentCreateModel, user_id: str) -> CommentOut:
+    if not story_crud.get(db, id=story_id):
         raise ValueError("Story not found")
+
+    data = CommentCreate(text=model.text,story_id=story_id)
 
     db_comment = comment_crud.create(
         db,
@@ -29,7 +31,7 @@ def get_comments_by_story(db: Session, *, story_id: int) -> List[CommentOut]:
         raise ValueError("Story not found")
     comments = comment_crud.get_multi_filtered(
         db,
-        filters=CommentCreate(story_id=story_id, text=""),
+        filters=CommentFilter(story_id=story_id),
         skip=0,
         limit=1000,
     )

@@ -1,7 +1,6 @@
 from fastapi import WebSocketException
 from starlette.websockets import WebSocket
 
-from core.redis import rds, _meta
 from core.security import decode_token
 
 

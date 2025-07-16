@@ -1,19 +1,11 @@
-import time
-from time import sleep
-
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.params import Depends
+import asyncio
 import json
 from typing import Any, Set, List, Dict, Optional
 
-# 기존 redis.py 또는 core/redis.py 파일의 내용
-# --------------------------------------------------------------------------
-# get_settings, rds, EXPIRE_SEC, etc. 초기 설정은 기존과 동일하다고 가정합니다.
-# 이 예제에서는 설명을 위해 필요한 변수들을 직접 정의합니다.
+import redis.asyncio as redis
+from fastapi import WebSocket
 
 from core.config import get_settings
-import redis.asyncio as redis
-import asyncio
 
 settings = get_settings()
 rds = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)

@@ -1,6 +1,7 @@
 from typing import TypeVar, Generic, Type, List, Optional
-from sqlalchemy.orm import Session, Query
+
 from pydantic import BaseModel
+from sqlalchemy.orm import Session, Query
 
 ModelType        = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)

@@ -7,7 +7,7 @@ from typing import List
 import aiohttp
 import openai
 
-from core.chat_manager import send_message, translate_to_english
+from core.chat_manager import translate_to_english
 from core.config import get_settings
 
 # 저장 경로 및 URL 접두사 설정

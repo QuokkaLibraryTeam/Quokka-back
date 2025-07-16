@@ -1,6 +1,6 @@
 # core/clova_utils.py
-import uuid
 import requests
+
 from core.config import get_settings
 
 settings = get_settings()

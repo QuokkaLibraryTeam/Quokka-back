@@ -16,11 +16,9 @@ from core.cluade import send_clova_chat
 from core.config import get_settings
 from core.image_manager import gen_two_images
 from core.image_manager_dall import gen_two_images_with_dall
-from core.security import decode_token
 from schemas.story import ClientStart, ClientAnswer, ClientChoice, ClientCmd
 from services.scene import create_scene
 from services.story import get_story_by_story_id
-
 
 ILLUST_OK = "ILLUST_OK"
 SCENE_OK  = "SCENE_OK"

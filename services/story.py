@@ -1,6 +1,3 @@
-import re
-from typing import Tuple, List
-
 from sqlalchemy.orm import Session
 
 from crud.story import story_crud
@@ -27,7 +24,7 @@ def get_all_story(db: Session):
     return stories
 
 def get_all_story_by_filter(db: Session, filters: StoryFilter):
-    stories = story_crud.get_multi_filtered(db, filter=filters)
+    stories = story_crud.get_multi_filtered(db, filters=filters)
     return stories
 
 def get_all_stories_by_user_id(db: Session,user_id : str):

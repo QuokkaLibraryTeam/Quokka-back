@@ -1,18 +1,16 @@
 # app/main.py
+import os
+
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
 from starlette.staticfiles import StaticFiles
 
-from core.config import get_settings
-from core.security import decode_token
-from db.base import Base, engine, get_db
 from admin.setup import setup_admin
 from admin.views.auth import router as auth_router
 from api.v1.routers import router as v1_router
-import os
-
 from core.config import get_settings
+from core.security import decode_token
 
 settings = get_settings()
 

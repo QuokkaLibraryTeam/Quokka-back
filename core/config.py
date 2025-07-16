@@ -1,8 +1,9 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "quokkalib"
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = Field(..., description="JWT 시크릿 키")
     ALGORITHM: str = Field(..., description="JWT 알고리즘")
-    EXPIRE_TIME: int = 60  # 분 단위
+    EXPIRE_TIME: int = 60000  # 분 단위
 
     GEMINI_MODEL: str = "gemini-2.0-flash"
     NAVER_CLOVA_API_URL: str = Field(..., description="클로바 API url")

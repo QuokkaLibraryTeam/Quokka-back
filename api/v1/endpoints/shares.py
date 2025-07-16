@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Request, Query,HTTPException
+from fastapi import APIRouter, Request, Query
 
 from schemas.share import ShareOut
-from services.share import list_shared, get_shared, all_tags
+from services.share import list_shared, all_tags
 
 router = APIRouter()
 

@@ -1,12 +1,15 @@
 from __future__ import annotations
-from datetime import datetime
-from typing import List, Optional
-import uuid
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+import uuid
+from datetime import datetime
+from typing import List
+
+from sqlalchemy import String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from db.base import Base
+
 
 class User(Base):
     __tablename__ = 'users'

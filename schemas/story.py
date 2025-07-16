@@ -42,7 +42,6 @@ class StoryOutWithDetail(BaseModel):
 
 class StoryOut(BaseModel):
     id: int
-
     model_config = ConfigDict(from_attributes=True)
 
 

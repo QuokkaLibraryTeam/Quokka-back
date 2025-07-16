@@ -6,7 +6,7 @@ from starlette import status
 
 from core.security import verify_token
 from db.base import get_db
-from schemas.comment import CommentUpdate, CommentOut, CommentCreate
+from schemas.comment import CommentUpdate, CommentOut, CommentCreateModel
 from services.comment import update_comment, delete_comment, create_comment, get_comments_by_story
 
 router = APIRouter()
@@ -46,12 +46,13 @@ def delete_comment_endpoint(
 @router.post("/{story_id}/comments", status_code=status.HTTP_201_CREATED)
 def post_comment(
     request: Request,
-    data: CommentCreate,
+    story_id: int,
+    data: CommentCreateModel,
     user_id: str = Depends(verify_token),
 ):
     db = request.state.db
     try:
-        result = create_comment(db, data=data, user_id=user_id)
+        result = create_comment(db,story_id, model=data, user_id=user_id)
         return {"message": "리뷰가 성공적으로 등록되었습니다.", "comment_id": result.id}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

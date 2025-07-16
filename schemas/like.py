@@ -1,6 +1,7 @@
 
 import uuid
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -18,3 +19,7 @@ class LikeOut(BaseModel):
 class LikeCount(BaseModel):
     story_id: int
     likes: int
+
+class LikeFilter(BaseModel):
+    story_id: int
+    user_id: uuid.UUID

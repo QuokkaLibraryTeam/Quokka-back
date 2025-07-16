@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy import String, DateTime, ForeignKey, ARRAY
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from db.base import Base
+
 
 class Share(Base):
     __tablename__ = "shares"

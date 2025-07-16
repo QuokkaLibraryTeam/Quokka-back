@@ -1,36 +1,18 @@
-from datetime import timedelta, datetime
-import requests
-
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-
-from sqlalchemy.orm import Session
-
+from datetime import datetime
 from urllib.parse import urlencode
 
+import requests
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 
-from core.security import create_access_token, verify_token
 from core.config import get_settings
-
-from models.user import User
+from core.security import create_access_token, verify_token
 from db.base import get_db
-from schemas.auth import AuthResponse
+from models.user import User
 
 router = APIRouter()
 settings = get_settings()
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends()
-):
-    token = create_access_token(form_data.username, expires_delta=timedelta(minutes=10))
-    return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/login")
 async def login():
